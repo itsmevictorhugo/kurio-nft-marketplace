@@ -1,12 +1,19 @@
-import { getMockDatabase, resetMockDatabase } from '@/mocks/database/mock-database';
+import { applyMockScenario } from '@/mocks/database/mock-database';
+import { mockScenarioNames, type MockScenarioName } from '@/mocks/scenarios/types';
 
-export const foundationScenarios = ['default'] as const;
-export type FoundationScenario = (typeof foundationScenarios)[number];
+export { mockScenarioNames, type MockScenarioName };
 
-export function selectMockScenario(scenario: FoundationScenario) {
-  getMockDatabase().scenario = scenario;
+let activeScenario: MockScenarioName = 'default';
+
+export function getMockScenario() {
+  return activeScenario;
+}
+
+export function selectMockScenario(scenario: MockScenarioName) {
+  activeScenario = scenario;
+  applyMockScenario(scenario);
 }
 
 export function resetMockScenario() {
-  resetMockDatabase();
+  activeScenario = 'default';
 }

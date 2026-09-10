@@ -28,6 +28,18 @@ Axios
 MSW handler
 ```
 
+## 2.1 Headers
+
+```text
+Authorization: Bearer <token>   authenticated requests
+X-Guest-Id: <guest-id>          guest cart identity before login
+Idempotency-Key: <key>          order creation (POST /orders)
+```
+
+Requests carrying `Authorization` are treated as authenticated; cart and
+quotation requests without it are treated as guest requests identified by
+`X-Guest-Id`.
+
 ---
 
 # 3. Session and Account
@@ -120,7 +132,10 @@ GET    /cart
 POST   /cart/items
 PATCH  /cart/items/:id
 DELETE /cart/items/:id
+DELETE /cart
 ```
+
+`DELETE /cart` removes every item from the requesting owner's cart.
 
 Required behavior:
 
@@ -137,14 +152,25 @@ Required behavior:
 
 # 7. Quotation
 
-The quotation layer must support:
+Required operations:
 
-- price validation;
-- availability validation;
-- coupon validation;
-- discount;
-- network fee;
-- total.
+```text
+POST /quote
+```
+
+The request body may carry an optional coupon code:
+
+```text
+{ "couponCode"?: string }
+```
+
+Required behavior:
+
+- computes subtotal, discount, network fee and total from the current cart;
+- validates the coupon at quote creation;
+- invalid coupon → `coupon_invalid`;
+- expired coupon → `coupon_expired`;
+- unavailable cart item → `availability_conflict`.
 
 The quotation is authoritative for final checkout values.
 
@@ -161,17 +187,32 @@ POST /orders
 GET  /orders/:id
 ```
 
-Order creation must accept an idempotency key.
+Order creation must accept an idempotency key through the `Idempotency-Key`
+header.
 
 Required behavior:
 
 ```text
-same key + same request
+same key + same user + same request
 → same/recovered order
 
-same key + different request
+same key + same user + different request
 → conflict
+
+same key used by another user
+→ independent; never exposes another user's order
 ```
+
+Before creating an order from a quote, the mock API revalidates the quote
+against current state:
+
+- price changes → `stale_quote`;
+- unavailable items → `availability_conflict`;
+- coupon no longer valid → `coupon_invalid`;
+- coupon no longer valid because it expired → `coupon_expired`.
+
+Idempotent recovery of an existing order returns the stored order without
+re-applying scenario transitions.
 
 Required states:
 

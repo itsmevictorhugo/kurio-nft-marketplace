@@ -386,6 +386,75 @@ Impact:
 Feature milestones must add shared-state handlers and scenarios rather than
 embedding mock responses in components or services.
 
+### ADR-003 — Coupon validation at quote creation and order creation
+
+Context:
+The README requires coupon application in the cart flow and coupon
+revalidation before checkout, but no cart-level coupon resource is defined.
+
+Decision:
+Coupons are applied when a quote is created (`POST /quote` with an optional
+`couponCode`) and are revalidated against current mock state when that quote
+is used to create an order. Invalid coupons return `coupon_invalid`; expired
+coupons return `coupon_expired` at both points. There is no coupon state on
+the cart itself.
+
+Reason:
+The quotation is the authoritative snapshot for checkout values, so coupon
+application belongs with the quote rather than the cart.
+
+Impact:
+The UI applies/removes coupons by requesting a new quote with or without the
+code. A coupon that expires between quotation and confirmation surfaces as an
+API error at order creation instead of silently applying a stale discount.
+Idempotent recovery of an already-created order is exempt from revalidation.
+
+### ADR-004 — Guest cart identity via `X-Guest-Id`
+
+Context:
+Carts must exist before authentication and visitor items must survive login,
+but unauthenticated requests carry no session token.
+
+Decision:
+Guest cart and quotation requests carry an `X-Guest-Id` header; mock carts
+are keyed `guest:<id>`. On login, the guest cart is merged into the user cart
+by NFT+edition, capped by current edition availability and `maxPerOrder`, and
+the guest cart is then cleared. Requests without the header fall back to the
+shared `guest:default` cart.
+
+Reason:
+The smallest transport-level identity that lets the mock API isolate and
+merge guest carts without introducing anonymous accounts.
+
+Impact:
+The application must generate and persist a stable guest id per browser and
+always send the header for guest cart calls. The `guest:default` fallback is
+a mock convenience for fixtures, not a multi-visitor isolation guarantee, and
+must be documented as such.
+
+### ADR-005 — Mock scenario selection and state reset
+
+Context:
+Scenarios must be deterministic and reusable across development,
+demonstration and Playwright, and reset must restore a known state.
+
+Decision:
+The active scenario is module-level state selected through
+`selectMockScenario()`. Scenario-specific data mutations (for example
+`sold-out` and `price-changed`) are applied to the shared mock database at
+selection time; handlers consult the active scenario per request.
+`resetMockState()` recreates the seed database and returns the scenario to
+`default`.
+
+Reason:
+Keeping scenario behavior in the mock layer, outside components and handlers'
+core logic, gives every test and demo a single deterministic entry point.
+
+Impact:
+Scenario effects are synchronous database mutations. Realtime-emitting
+scenarios will need to publish events through the Socket.IO mock transport
+when realtime is implemented; this decision does not cover that yet.
+
 ---
 
 # 18. Figma Deviations

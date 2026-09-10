@@ -1,1 +1,1 @@
-export const foundationFixtures = Object.freeze({});
+export * from '@/mocks/fixtures/seed';
