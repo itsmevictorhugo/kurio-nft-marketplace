@@ -347,6 +347,45 @@ Impact:
 
 Do not fabricate decisions before they are actually made.
 
+### ADR-001 — Foundation routing and order-confirmation compatibility route
+
+Context:
+The README defines the conceptual order route as `/order/$orderId`, while the
+foundation task also requires a placeholder at `/order-confirmation`.
+
+Decision:
+The foundation exposes both placeholder routes. `/order/$orderId` remains the
+canonical route for a persisted order, and `/order-confirmation` is retained as
+the task-required compatibility placeholder until the order flow is implemented.
+
+Reason:
+This preserves the README route without omitting the explicit foundation-task
+route. Neither route currently represents order behavior.
+
+Impact:
+The later order milestone must direct confirmed orders to `/order/$orderId` and
+decide whether `/order-confirmation` should redirect or be removed.
+
+### ADR-002 — Development mock bootstrap
+
+Context:
+The application needs a reusable MSW network boundary from its first runnable
+state, before domain handlers are implemented.
+
+Decision:
+The browser worker starts before React renders in development, controlled by
+`VITE_ENABLE_MSW` (enabled unless explicitly set to `false`). The foundation
+registers only a non-domain health handler; fixtures, database, scenarios, and
+reset entry points are separate modules for later feature handlers.
+
+Reason:
+This keeps mock behavior outside React components and creates one deterministic
+state boundary shared by development and tests without inventing product APIs.
+
+Impact:
+Feature milestones must add shared-state handlers and scenarios rather than
+embedding mock responses in components or services.
+
 ---
 
 # 18. Figma Deviations

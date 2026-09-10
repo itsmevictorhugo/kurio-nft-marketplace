@@ -1,0 +1,89 @@
+import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
+import { RootLayout } from '@/app/layouts/root-layout';
+import { RoutePlaceholder } from '@/components/shared/route-placeholder';
+
+const rootRoute = createRootRoute({
+  component: RootLayout,
+  notFoundComponent: () => <RoutePlaceholder title="Page not found" />, 
+});
+
+const homeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: () => <RoutePlaceholder title="Home" />, 
+});
+
+const nftRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/nft/$id',
+  component: () => <RoutePlaceholder title="NFT detail" />, 
+});
+
+const cartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/cart',
+  component: () => <RoutePlaceholder title="Cart" />, 
+});
+
+const checkoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/checkout',
+  component: () => <RoutePlaceholder title="Checkout" />, 
+});
+
+const orderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/order/$orderId',
+  component: () => <RoutePlaceholder title="Order confirmation" />, 
+});
+
+const orderConfirmationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/order-confirmation',
+  component: () => <RoutePlaceholder title="Order confirmation" />, 
+});
+
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: () => <RoutePlaceholder title="Login" />, 
+});
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  component: () => <RoutePlaceholder title="Register" />, 
+});
+
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profile',
+  component: () => <RoutePlaceholder title="Profile" />, 
+});
+
+const walletsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/wallets',
+  component: () => <RoutePlaceholder title="Wallets" />, 
+});
+
+const routeTree = rootRoute.addChildren([
+  homeRoute,
+  nftRoute,
+  cartRoute,
+  checkoutRoute,
+  orderRoute,
+  orderConfirmationRoute,
+  loginRoute,
+  registerRoute,
+  profileRoute,
+  walletsRoute,
+]);
+
+export const router = createRouter({ routeTree });
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
