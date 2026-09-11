@@ -4,6 +4,7 @@ import { RoutePlaceholder } from '@/components/shared/route-placeholder';
 import { HomePage } from '@/features/catalog/pages/home-page';
 import { validateCatalogSearch } from '@/features/catalog/search-params';
 import { NftDetailPage } from '@/features/nft/pages/nft-detail-page';
+import { CartPage } from '@/features/cart/pages/cart-page';
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -34,7 +35,7 @@ const nftRoute = createRoute({
 const cartRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/cart',
-  component: () => <RoutePlaceholder title="Cart" />, 
+  component: CartPage,
 });
 
 const checkoutRoute = createRoute({

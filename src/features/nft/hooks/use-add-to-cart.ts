@@ -1,18 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
-import { getSessionToken } from '@/features/auth/session';
-import { getGuestId } from '@/features/cart/guest-id';
-import { cartApi, type RequestIdentity } from '@/lib/api/resources';
+import { cartApi } from '@/lib/api/resources';
+import { cartQueryKey, getRequestIdentity, quoteQueryKey } from '@/features/cart/identity';
 
 export function useAddToCart(nftId: string, editionId: string | undefined) {
   const queryClient = useQueryClient();
-  const token = getSessionToken();
-  const identity: RequestIdentity = token ? { token } : { guestId: getGuestId() };
+  const identity = getRequestIdentity();
 
   return useMutation({
     mutationFn: (quantity: number) => cartApi.add(identity, { nftId, editionId: editionId as string, quantity }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['cart'] });
+      void queryClient.invalidateQueries({ queryKey: cartQueryKey(identity) });
+      void queryClient.invalidateQueries({ queryKey: quoteQueryKey(identity) });
     },
     // Availability race safety: the API is authoritative, so a conflict
     // triggers a fresh NFT fetch instead of trusting the rendered stock.

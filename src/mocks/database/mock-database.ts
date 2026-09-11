@@ -31,6 +31,109 @@ export interface MockDatabase {
 
 const FIXED_DATE = '2026-01-15T00:00:00.000Z';
 
+const PERSISTENCE_KEY = 'kurio-mock-db:v1';
+
+/**
+ * The browser mock database lives in page scope, so a full navigation or a
+ * refresh re-runs its module and would silently reset every cart, session and
+ * scenario. A real backend would not forget the server state on a page reload,
+ * so the mock layer persists a serialized snapshot in sessionStorage (per
+ * origin + tab) and rehydrates it when the module boots again.
+ *
+ * The persistence is gated to real browsers: the node/jsdom environments used
+ * by unit and integration tests do not feature a service worker and keep their
+ * clean, deterministic per-test databases.
+ */
+function canUsePersistentStore() {
+  return typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+}
+
+function mapEntries<V>(map: Map<string, V>) {
+  return Array.from(map.entries());
+}
+
+export function persistMockDatabase() {
+  if (!canUsePersistentStore()) {
+    return;
+  }
+  try {
+    const { mockDatabase: database } = { mockDatabase: getMockDatabase() };
+    const snapshot = JSON.stringify({
+      users: database.users,
+      sessions: mapEntries(database.sessions),
+      nfts: database.nfts,
+      favoritesByUser: mapEntries(database.favoritesByUser),
+      cartsByOwner: mapEntries(database.cartsByOwner),
+      profilesByUser: mapEntries(database.profilesByUser),
+      walletsByUser: mapEntries(database.walletsByUser),
+      coupons: database.coupons,
+      quotes: mapEntries(database.quotes),
+      orders: mapEntries(database.orders),
+      idempotencyKeys: mapEntries(database.idempotencyKeys),
+      timedOutOrderKeys: Array.from(database.timedOutOrderKeys),
+      counters: database.counters,
+    });
+    window.sessionStorage.setItem(PERSISTENCE_KEY, snapshot);
+  } catch {
+    // Persistence is best-effort; an unavailable store never breaks the mock.
+  }
+}
+
+function restorePersistedDatabase(): MockDatabase | undefined {
+  if (!canUsePersistentStore()) {
+    return undefined;
+  }
+  try {
+    const raw = window.sessionStorage.getItem(PERSISTENCE_KEY);
+    if (!raw) {
+      return undefined;
+    }
+    const data = JSON.parse(raw) as {
+      users: MockDatabase['users'];
+      sessions: [string, StoredSession][];
+      nfts: MockDatabase['nfts'];
+      favoritesByUser: [string, MockDatabase['favoritesByUser'] extends Map<string, infer V> ? V : never][];
+      cartsByOwner: [string, MockDatabase['cartsByOwner'] extends Map<string, infer V> ? V : never][];
+      profilesByUser: [string, MockDatabase['profilesByUser'] extends Map<string, infer V> ? V : never][];
+      walletsByUser: [string, MockDatabase['walletsByUser'] extends Map<string, infer V> ? V : never][];
+      coupons: MockDatabase['coupons'];
+      quotes: [string, MockDatabase['quotes'] extends Map<string, infer V> ? V : never][];
+      orders: [string, MockDatabase['orders'] extends Map<string, infer V> ? V : never][];
+      idempotencyKeys: [string, MockDatabase['idempotencyKeys'] extends Map<string, infer V> ? V : never][];
+      timedOutOrderKeys: string[];
+      counters: MockDatabase['counters'];
+    };
+    return {
+      users: data.users,
+      sessions: new Map(data.sessions),
+      nfts: data.nfts,
+      favoritesByUser: new Map(data.favoritesByUser),
+      cartsByOwner: new Map(data.cartsByOwner),
+      profilesByUser: new Map(data.profilesByUser),
+      walletsByUser: new Map(data.walletsByUser),
+      coupons: data.coupons,
+      quotes: new Map(data.quotes),
+      orders: new Map(data.orders),
+      idempotencyKeys: new Map(data.idempotencyKeys),
+      timedOutOrderKeys: new Set(data.timedOutOrderKeys),
+      counters: data.counters,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+export function clearPersistedDatabase() {
+  if (!canUsePersistentStore()) {
+    return;
+  }
+  try {
+    window.sessionStorage.removeItem(PERSISTENCE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 function clone<T>(value: T): T {
   return structuredClone(value);
 }
@@ -47,7 +150,7 @@ export function idempotencyScopeKey(userId: string, key: string) {
   return `user:${userId}:${key}`;
 }
 
-function createMockDatabase(): MockDatabase {
+function createSeededDatabase(): MockDatabase {
   const users = clone(seedUsers);
   const cartsByOwner = new Map<string, Cart>([
     [
@@ -102,6 +205,10 @@ function createMockDatabase(): MockDatabase {
   };
 }
 
+function createMockDatabase(): MockDatabase {
+  return restorePersistedDatabase() ?? createSeededDatabase();
+}
+
 let mockDatabase = createMockDatabase();
 
 export function getMockDatabase() {
@@ -109,7 +216,8 @@ export function getMockDatabase() {
 }
 
 export function resetMockDatabase() {
-  mockDatabase = createMockDatabase();
+  mockDatabase = createSeededDatabase();
+  clearPersistedDatabase();
 }
 
 export function createSession(userId: string): StoredSession {

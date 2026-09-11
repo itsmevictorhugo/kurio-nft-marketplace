@@ -16,6 +16,7 @@ import {
   idempotencyScopeKey,
   mergeGuestCartIntoUser,
   nextId,
+  persistMockDatabase,
   removeSession,
 } from '@/mocks/database/mock-database';
 import { hashPassword } from '@/mocks/database/password';
@@ -136,6 +137,7 @@ export const domainHandlers = [
     database.favoritesByUser.set(id, []);
     database.profilesByUser.set(id, { userId: id, displayName, bio: '', avatarUrl: '' });
     database.walletsByUser.set(id, []);
+    persistMockDatabase();
     return HttpResponse.json<RegisterResponse>({ user: { id, email, displayName } }, { status: 201 });
   }),
 
@@ -153,6 +155,7 @@ export const domainHandlers = [
     if (guestId) {
       mergeGuestCartIntoUser(guestId, user.id);
     }
+    persistMockDatabase();
     return HttpResponse.json<AuthResponse>({ session: createSession(user.id) });
   }),
 
@@ -170,6 +173,7 @@ export const domainHandlers = [
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!getSession(token)) return unauthorized();
     removeSession(token);
+    persistMockDatabase();
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -244,6 +248,7 @@ export const domainHandlers = [
       favorites.push({ nftId, createdAt: FIXED_DATE });
       getMockDatabase().favoritesByUser.set(userId, favorites);
     }
+    persistMockDatabase();
     return HttpResponse.json<FavoritesResponse>({ items: favorites }, { status: 201 });
   }),
 
@@ -254,6 +259,7 @@ export const domainHandlers = [
     if (!userId) return unauthorized();
     const favorites = getMockDatabase().favoritesByUser.get(userId) ?? [];
     getMockDatabase().favoritesByUser.set(userId, favorites.filter((item) => item.nftId !== params.nftId));
+    persistMockDatabase();
     return HttpResponse.json<FavoritesResponse>({ items: getMockDatabase().favoritesByUser.get(userId) ?? [] });
   }),
 
@@ -285,6 +291,7 @@ export const domainHandlers = [
     const item: CartItem = existing ?? { id: nextId('cartItem'), nftId, editionId, quantity: 0 };
     item.quantity = nextQuantity;
     if (!existing) cart.items.push(item);
+    persistMockDatabase();
     return HttpResponse.json<CartItemResponse>({ item }, { status: 201 });
   }),
 
@@ -302,6 +309,7 @@ export const domainHandlers = [
       return apiError(409, 'availability_conflict', 'Requested quantity is unavailable.');
     }
     item.quantity = quantity;
+    persistMockDatabase();
     return HttpResponse.json<CartItemResponse>({ item });
   }),
 
@@ -310,6 +318,7 @@ export const domainHandlers = [
     if (scenario) return scenario;
     const cart = getOrCreateCart(requestOwnerId(request));
     cart.items = cart.items.filter((item) => item.id !== params.itemId);
+    persistMockDatabase();
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -317,6 +326,7 @@ export const domainHandlers = [
     const scenario = await scenarioResponse(request);
     if (scenario) return scenario;
     getOrCreateCart(requestOwnerId(request)).items = [];
+    persistMockDatabase();
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -371,6 +381,7 @@ export const domainHandlers = [
       createdAt: FIXED_DATE,
     };
     getMockDatabase().quotes.set(quote.id, quote);
+    persistMockDatabase();
     return HttpResponse.json<QuoteResponse>({ quote });
   }),
 
@@ -432,6 +443,7 @@ export const domainHandlers = [
     };
     getMockDatabase().orders.set(order.id, order);
     getMockDatabase().idempotencyKeys.set(scopedKey, { userId, fingerprint, orderId: order.id });
+    persistMockDatabase();
     if (getMockScenario() === 'order-timeout' && !getMockDatabase().timedOutOrderKeys.has(scopedKey)) {
       getMockDatabase().timedOutOrderKeys.add(scopedKey);
       return apiError(504, 'server_error', 'Order was created but the response timed out.');
@@ -480,6 +492,7 @@ export const domainHandlers = [
     }
     if (typeof body?.bio === 'string') profile.bio = body.bio;
     if (typeof body?.avatarUrl === 'string') profile.avatarUrl = body.avatarUrl;
+    persistMockDatabase();
     return HttpResponse.json<ProfileResponse>({ profile });
   }),
 
@@ -499,6 +512,7 @@ export const domainHandlers = [
       return apiError(400, 'validation_error', 'New password must contain at least eight characters.');
     }
     user.passwordHash = hashPassword(newPassword);
+    persistMockDatabase();
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -531,6 +545,7 @@ export const domainHandlers = [
     const wallet: Wallet = { id: nextId('wallet'), label, address, network, isPrimary };
     wallets.push(wallet);
     getMockDatabase().walletsByUser.set(userId, wallets);
+    persistMockDatabase();
     return HttpResponse.json<WalletResponse>({ wallet }, { status: 201 });
   }),
 
@@ -552,6 +567,7 @@ export const domainHandlers = [
     if (body?.isPrimary === true) {
       wallets.forEach((item) => (item.isPrimary = item.id === wallet.id));
     }
+    persistMockDatabase();
     return HttpResponse.json<WalletResponse>({ wallet });
   }),
 ];

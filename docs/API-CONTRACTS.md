@@ -349,6 +349,18 @@ Scenarios must be deterministic and reusable by:
 - demonstration;
 - Playwright.
 
+Mock-only control endpoints (not part of the application contract, never
+referenced by application code):
+
+```text
+POST /api/__mock/reset       restore the seed database and the default scenario
+POST /api/__mock/scenario    select a named scenario ({ "scenario": "<name>" })
+```
+
+They exist so development tooling and Playwright can start every flow from an
+isolated, deterministic state, and their responses are mock-layer artifacts
+only.
+
 ---
 
 # 14. Contract Evolution

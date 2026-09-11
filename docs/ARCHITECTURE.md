@@ -147,7 +147,8 @@ Cart totals are based on API quotation.
 
 ETH amounts remain decimal strings.
 
-Realtime NFT changes must synchronize the cart.
+Realtime NFT changes must synchronize the cart (see ADR-013: deferred to the
+realtime milestone; REST refetch is authoritative in the meantime).
 
 ---
 
@@ -221,6 +222,10 @@ The mock system maintains shared state for:
 - profiles;
 - wallets;
 - orders.
+
+The mock database is serialized to `sessionStorage` and restored when the
+module boots again, so server state survives a page refresh the same way a
+real backend would (see ADR-012).
 
 Scenarios are deterministic.
 
@@ -585,6 +590,108 @@ Only seed/domain/UI files change. REST contracts, cart/order semantics,
 favorite behavior and the existing loading/error/not-found states are
 unchanged.
 
+### ADR-010 — Quote-driven cart summary, computed by the API
+
+Context:
+The cart must display subtotal, discount, network fee, total and per-line
+totals, and cupons must affect only the discount. ETH amounts must preserve
+decimal precision.
+
+Decision:
+The cart page derives every money value from the quotation endpoint. The
+quote cache is keyed `['quote', identity, couponCode ?? null]` and is enabled
+only while the cart has items; requesting a quote with a coupon code applies
+it, requesting without one removes it. The UI renders `subtotal`, `discount`,
+`networkFee`, `total` and each `QuoteItem.total` verbatim as decimal ETH
+strings through `lib/money/eth.ts` utilities. No arithmetic happens in the
+browser; discount sign and totals therefore match the server exactly.
+
+Reason:
+The quote is the authoritative price snapshot (see ADR-003), so all money
+must flow through it rather than being recomputed on the client; this also
+guarantees the no-floating-point rule is about formatting, not math.
+
+Impact:
+The coupon input only instructs quote creation; the summary is a pure view of
+the quote. A coupon error surfaces from the quote request as an accessible
+inline message and the plain (no-coupon) quote is restored.
+
+### ADR-011 — Cart mutations: optimistic update, rollback and reconciliation
+
+Context:
+Quantity changes must feel immediate, but the server remains authoritative on
+availability and quantity; a failed mutation must not leave stale UI state.
+
+Decision:
+Quantity updates are optimistic (`setQueryData` with the next quantity),
+serialized per item so overlapping taps cannot interleave, and rolled back to
+the previous value when the PATCH fails. On settle, the cart and quote queries
+are invalidated and refetched so authoritative state wins. A specific `409
+availability_conflict` response renders an accessible inline banner and the
+refetch reconciles the quantity; any other quantity/remove/clear failure
+renders a generic retry message. Add-to-cart keeps its synchronous
+submitting guard to prevent duplicate submissions (idempotency requirement
+for order creation is handled separately at order time).
+
+Reason:
+Optimistic rendering matches the challenge's direct-feedback UX while the
+invalidation/refetch loop satisfies the "server is authoritative" and
+"duplicates must not regress state" rules without inventing distributed
+semantics.
+
+Impact:
+Only cart item mutations are optimistic; removal resets the cart summary via
+quote invalidation, and clearing navigates the user to the empty state only
+after the refetched cart confirms it is empty.
+
+### ADR-012 — Durable mock database across page reloads
+
+Context:
+The mock database lives in page scope, so any full navigation re-runs its
+module and resets every cart, session, order and scenario — a real backend
+would not forget server state on refresh. Refresh persistence (CART-09),
+guest→user preservation and scenario-based E2E flows all require durable
+server state across page loads.
+
+Decision:
+The mock layer serializes the full database (users, sessions, NFTs, carts,
+favorites, quotes, orders, wallets, coupons, idempotency records, counters) to
+`sessionStorage` and rehydrates it when the module boots again. Persistence is
+gated to real browsers (`'serviceWorker' in navigator`), so node/jsdom unit and
+integration suites keep their clean per-test databases. Every database-mutating
+handler calls `persistMockDatabase()`; `resetMockDatabase()` clears the stored
+snapshot and restores the seed.
+
+Reason:
+This keeps the "server is durable" semantics of cart and scenario flows honest
+in the browser without changing the REST contract or application code.
+
+Impact:
+`sessionStorage` is per-tab, so a brand-new tab starts from the seed (by
+design, like a fresh backend); E2E suites already reset state per test.
+Serialization maps Maps/Sets to entry arrays and rehydrates them.
+
+### ADR-013 — Realtime cart synchronization deferred to the realtime milestone
+
+Context:
+The README requires Socket.IO synchronization of NFT changes into the cart,
+but this milestone explicitly excludes realtime transport.
+
+Decision:
+No Socket.IO events are emitted or consumed for cart state in this milestone.
+The cart reads exclusively from REST and reconciles after every mutation or
+refetch. Realtime handling of `nft.updated` into the cart, stale-quote
+detection, duplicate/stale event guards and reconnection are scheduled for the
+realtime milestone and are not simulated from UI code.
+
+Reason:
+"Realtime Ordering" requires the real socket path (per the critical rules);
+simulating it with UI-driven cache changes would violate the socket-only rule.
+
+Impact:
+CART-11/CART-12 in the test matrix remain explicitly unimplemented until the
+realtime milestone; they are marked rather than silently declared complete.
+
 ---
 
 # 18. Figma Deviations
@@ -663,3 +770,17 @@ Document limitations caused by:
 - Socket.IO/MSW transport limitations.
 
 Do not hide known limitations.
+
+Current known limitations:
+
+- Realtime cart/quote synchronization is not implemented yet (deferred to the
+  realtime milestone, see ADR-013). Price/availability updates in the cart are
+  picked up by REST refetch only; `nft.updated` events do not yet drive the
+  cart. CART-11/CART-12 in `TEST-MATRIX.md` are marked pending.
+- The durable mock database uses `sessionStorage`, which is scoped per tab. A
+  new tab starts from the seed state, so cross-tab carts do not converge (a
+  mock transport limitation, noted in ADR-012).
+- The login/register UI is not implemented yet; guest→user cart merge is
+  exercised through the API and the session-token placeholder in
+  `features/auth/session.ts`. The header cart badge refreshes from the
+  identity-aware cart query.

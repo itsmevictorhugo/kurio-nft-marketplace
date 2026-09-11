@@ -163,3 +163,21 @@ export function ShareXIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function TrashIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+      <path d="M10 11v5M14 11v5" />
+    </svg>
+  );
+}
+
+export function TicketIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)}>
+      <path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a3 3 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a3 3 0 0 0 0-6Z" />
+      <path d="M13 5v2M13 11v2M13 17v2" />
+    </svg>
+  );
+}

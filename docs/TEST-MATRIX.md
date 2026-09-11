@@ -83,6 +83,28 @@ The README remains authoritative.
 | CART-11 | Price update                     | realtime.spec |
 | CART-12 | Availability update              | realtime.spec |
 
+Implemented cart evidence:
+
+- `src/features/cart/cart.test.tsx` (Vitest, 18 tests): loading skeleton,
+  empty state with catalog CTA, items with edition/price/quote values,
+  optimistic quantity update with quote reconciliation, rollback on network
+  failure with accessible error, `409 availability_conflict` banner and
+  reconcile, remove item, clear cart, KURIO10 acceptance with discounted
+  totals (`-0.125 ETH` / `1.128 ETH`), invalid coupon, expired coupon, coupon
+  removal, guest `X-Guest-Id` header, authenticated `Authorization` header,
+  guest/auth cache-key isolation, identity resolution and guest→user merge.
+- `tests/e2e/cart.spec.ts` (Playwright, desktop + mobile): add from NFT
+  detail with header/mobile badge count, quantity edit with totals and
+  refresh persistence, item removal, per-order availability cap, rejected
+  (sold-out) edition state with blocked checkout, coupon apply/remove/invalid/
+  expired, and guest cart merge on login without leaking another user's cart.
+  Every scenario starts from an isolated, deterministic mock state via
+  `POST /api/__mock/reset`.
+
+CART-11 and CART-12 remain intentionally pending: they require the realtime
+milestone's Socket.IO path (see `ARCHITECTURE.md` ADR-013) and are not
+simulated from UI code.
+
 ---
 
 ## 7. Checkout

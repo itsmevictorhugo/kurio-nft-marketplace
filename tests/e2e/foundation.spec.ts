@@ -4,7 +4,7 @@ test('loads the application shell', async ({ page }) => {
   const routes = [
     ['/', 'Bem-vindo à Kurio'],
     ['/nft/nft-aurora', 'Aurora Signal'],
-    ['/cart', 'Cart'],
+    ['/cart', 'Seu carrinho está vazio'],
     ['/checkout', 'Checkout'],
     ['/order/foundation', 'Order confirmation'],
     ['/order-confirmation', 'Order confirmation'],

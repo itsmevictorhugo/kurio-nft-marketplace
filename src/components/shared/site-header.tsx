@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CartIcon, SearchIcon } from '@/components/shared/icons';
+import { cartItemCount, useCart } from '@/features/cart/hooks/use-cart';
 
 const inactiveSections = ['Mercado', 'Criadores', 'Aprenda'] as const;
 
@@ -12,6 +13,8 @@ export function SiteHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const isDetail = location.pathname.startsWith('/nfts/');
+  const cart = useCart();
+  const count = cartItemCount(cart.data);
 
   const updateSearch = (value: string) => {
     setSearchTerm(value);
@@ -80,10 +83,18 @@ export function SiteHeader() {
           </Button>
           <Link
             to="/cart"
-            aria-label="Carrinho de NFTs"
-            className="rounded-sm p-2 text-kurio-tan outline-none transition-colors hover:text-kurio-accent focus-visible:ring-2 focus-visible:ring-kurio-accent"
+            aria-label={`Carrinho de NFTs${count > 0 ? `, ${count} ${count === 1 ? 'item' : 'itens'}` : ''}`}
+            className="relative rounded-sm p-2 text-kurio-tan outline-none transition-colors hover:text-kurio-accent focus-visible:ring-2 focus-visible:ring-kurio-accent"
           >
             <CartIcon />
+            {count > 0 ? (
+              <span
+                className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-kurio-flame px-1 text-[10px] font-bold leading-none text-kurio-night"
+                aria-hidden="true"
+              >
+                {count}
+              </span>
+            ) : null}
           </Link>
           <Link
             to="/login"

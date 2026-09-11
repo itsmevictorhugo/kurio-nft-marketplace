@@ -1,10 +1,13 @@
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { CartIcon, HeartIcon, HomeIcon, UserIcon } from '@/components/shared/icons';
+import { cartItemCount, useCart } from '@/features/cart/hooks/use-cart';
 
 export function MobileBottomNav() {
   const matchRoute = useMatchRoute();
   const isHome = matchRoute({ to: '/', fuzzy: false }) ?? false;
+  const cart = useCart();
+  const count = cartItemCount(cart.data);
 
   const itemClass =
     'flex h-14 w-16 items-center justify-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-kurio-accent';
@@ -29,8 +32,20 @@ export function MobileBottomNav() {
         <div className="relative w-16" aria-hidden="true">
           <div className="absolute -top-6 left-1/2 h-14 w-14 -translate-x-1/2 rounded-full border-4 border-kurio-night bg-kurio-flame/90" />
         </div>
-        <Link to="/cart" aria-label="Carrinho" className={cn(itemClass, 'text-kurio-tan')}>
+        <Link
+          to="/cart"
+          aria-label={`Carrinho${count > 0 ? `, ${count} ${count === 1 ? 'item' : 'itens'}` : ''}`}
+          className={cn(itemClass, 'relative text-kurio-tan')}
+        >
           <CartIcon />
+          {count > 0 ? (
+            <span
+              className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-kurio-flame px-1 text-[10px] font-bold leading-none text-kurio-night"
+              aria-hidden="true"
+            >
+              {count}
+            </span>
+          ) : null}
         </Link>
         <Link to="/profile" aria-label="Perfil" className={cn(itemClass, 'text-kurio-tan')}>
           <UserIcon />
