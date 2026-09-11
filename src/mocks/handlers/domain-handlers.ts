@@ -155,8 +155,9 @@ export const domainHandlers = [
     if (guestId) {
       mergeGuestCartIntoUser(guestId, user.id);
     }
+    const session = createSession(user.id);
     persistMockDatabase();
-    return HttpResponse.json<AuthResponse>({ session: createSession(user.id) });
+    return HttpResponse.json<AuthResponse>({ session });
   }),
 
   http.get(`${API}/auth/session`, async ({ request }) => {
@@ -460,6 +461,7 @@ export const domainHandlers = [
     if (!order) return apiError(404, 'not_found', 'Order was not found.');
     if (order.ownerId !== userId) return apiError(403, 'forbidden', 'Order belongs to another user.');
     transitionOrderForScenario(order);
+    persistMockDatabase();
     return HttpResponse.json<OrderResponse>({ order });
   }),
 

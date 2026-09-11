@@ -52,6 +52,15 @@ The README remains authoritative.
 | AUTH-07 | Logout                  | auth.spec |
 | AUTH-08 | User switching          | auth.spec |
 
+Implemented authentication evidence (login required by the checkout/orders
+milestone; the rest of the AUTH surface belongs to the authentication
+milestone):
+
+- `src/features/auth/login.test.tsx` (Vitest, 7 tests): heading/form render,
+  empty-field validation, invalid credentials, successful login storing the
+  session token, `redirect=/checkout` resolution, `redirect` to an order page,
+  and rejection of non-internal redirect values.
+
 ---
 
 ## 5. Favorites
@@ -124,6 +133,27 @@ simulated from UI code.
 | CHECK-11 | Fee revalidation           | checkout.spec |
 | CHECK-12 | Stale confirmation blocked | realtime.spec |
 
+Implemented checkout evidence:
+
+- `src/features/checkout/checkout.test.tsx` (Vitest, 11 tests): auth guard,
+  collector data + wallet form render, empty cart state, wallet/network
+  mismatch blocking, wallet connect/refused/disconnect, successful order
+  creation navigation, `values-changed` banner through quote revalidation,
+  cart preserved on rejection, idempotency key stability across repeated
+  confirm clicks, and coupon carried from the cart across navigation.
+- `src/features/checkout/checkout-attempt.test.ts` (Vitest, 12 tests): quote
+  total extraction, `totalsMatch`, the attempt store (
+  write/read/clear/corruption/missing), per-token isolation, and the stable
+  idempotency key derivation (deterministic per attempt, distinct across
+  attempts, never derived from the quote id).
+- `tests/e2e/checkout.spec.ts` (Playwright, desktop + mobile): anonymous
+  redirect to login, wallet connect + simulated purchase with the
+  `payment-confirmed` scenario, and refused payment with the cart kept intact.
+  Every scenario starts from `POST /api/__mock/reset` and sets the scenario
+  through `POST /api/__mock/scenario`.
+
+CHECK-12 depends on the realtime `order.updated` path and stays pending.
+
 ---
 
 ## 8. Orders
@@ -140,7 +170,22 @@ simulated from UI code.
 | ORDER-08 | Refresh recovery                 | order-recovery.spec |
 | ORDER-09 | Receipt snapshot                 | checkout.spec       |
 | ORDER-10 | Preserve cart after failure      | order-recovery.spec |
-| ORDER-11 | Remove purchased quantities only | checkout.spec       |
+| ORDER-11 | Remove purchased quantities only | checkout.spec |
+
+Implemented order evidence:
+
+- `src/features/orders/order-page.test.tsx` (Vitest, 7 tests): auth guard,
+  not-found for another user's order (403 → not found, not a session expiry),
+  pending status, scenario-driven confirmation, rejected status with a
+  back-to-cart CTA, `/order-confirmation` redirect to home, and receipt totals.
+- `tests/e2e/order-recovery.spec.ts` (Playwright, desktop + mobile): the
+  `order-timeout` scenario (first `POST /orders` → 504 after the order is
+  stored) is auto-retried once with the same idempotency key, the recovered
+  order confirms and the cart is emptied of the purchased quantities — no
+  duplicate orders.
+- Mock scenarios used: `payment-confirmed`, `payment-rejected`,
+  `order-timeout` (204/504 semantics per `docs/API-CONTRACTS.md`), all wired
+  through `POST /api/__mock/scenario` and reset per test.
 
 ---
 

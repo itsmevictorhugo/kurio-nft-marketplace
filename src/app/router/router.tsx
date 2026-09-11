@@ -1,10 +1,14 @@
 import { createRootRoute, createRoute, createRouter, parseSearchWith, redirect, stringifySearchWith } from '@tanstack/react-router';
 import { RootLayout } from '@/app/layouts/root-layout';
 import { RoutePlaceholder } from '@/components/shared/route-placeholder';
+import { getSessionToken } from '@/features/auth/session';
+import { LoginPage } from '@/features/auth/pages/login-page';
 import { HomePage } from '@/features/catalog/pages/home-page';
 import { validateCatalogSearch } from '@/features/catalog/search-params';
 import { NftDetailPage } from '@/features/nft/pages/nft-detail-page';
 import { CartPage } from '@/features/cart/pages/cart-page';
+import { CheckoutPage } from '@/features/checkout/pages/checkout-page';
+import { OrderDetailPage } from '@/features/orders/pages/order-detail-page';
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -41,25 +45,40 @@ const cartRoute = createRoute({
 const checkoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/checkout',
-  component: () => <RoutePlaceholder title="Checkout" />, 
+  beforeLoad: () => {
+    if (!getSessionToken()) {
+      throw redirect({ to: '/login', search: { redirect: '/checkout' } });
+    }
+  },
+  component: CheckoutPage,
 });
 
 const orderRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/order/$orderId',
-  component: () => <RoutePlaceholder title="Order confirmation" />, 
+  beforeLoad: ({ params }) => {
+    if (!getSessionToken()) {
+      throw redirect({ to: '/login', search: { redirect: `/order/${params.orderId}` } });
+    }
+  },
+  component: OrderDetailPage,
 });
 
 const orderConfirmationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/order-confirmation',
-  component: () => <RoutePlaceholder title="Order confirmation" />, 
+  beforeLoad: () => {
+    throw redirect({ to: '/' });
+  },
 });
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  component: () => <RoutePlaceholder title="Login" />, 
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search?.redirect === 'string' ? search.redirect : undefined,
+  }),
+  component: LoginPage,
 });
 
 const registerRoute = createRoute({

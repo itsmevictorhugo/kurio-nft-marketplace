@@ -194,10 +194,10 @@ evidence is recorded.
 | Foundation           | DONE      | `src/app/router`, layouts, dev MSW bootstrap |
 | Catalog + NFT Detail | DONE      | `catalog.spec`, `nft.spec` equivalents in Vitest (`catalog.test.tsx`, `nft-detail.test.tsx`) |
 | Cart                 | DONE      | `src/features/cart/*`, `cart.test.tsx`, `tests/e2e/cart.spec.ts` (desktop + mobile) |
-| Authentication       | PENDING   | login/register/profiles UI not implemented; session-token placeholder only |
+| Authentication       | PARTIAL   | login implemented for the checkout guard (`login.test.tsx`, `checkout.spec`); registration/profile management UI pending |
 | Favorites            | PENDING   | API-driven from detail; dedicated favorites UI pending |
-| Checkout/Orders      | PENDING   | `/checkout` and `/order/*` are placeholders |
-| Profile/Wallets      | PENDING   | API contracts exist; UI pending |
+| Checkout/Orders      | DONE      | `src/features/checkout/*`, `src/features/orders/*`, `checkout.test.tsx`, `checkout-attempt.test.ts`, `order-page.test.tsx`, `tests/e2e/checkout.spec.ts`, `tests/e2e/order-recovery.spec.ts` (desktop + mobile) |
+| Profile/Wallets      | PENDING   | read-side hooks used by checkout; management UI pending |
 | Realtime             | PENDING   | Socket.IO milestone not started; cart realtime explicitly deferred (ADR-013) |
 | Accessibility suite  | PENDING   | `accessibility.spec` not yet written; per-component a11y verified in Vitest/E2E |
 | Visual regression    | PENDING   | baselines for Home/NFT Detail/Cart not yet committed |
@@ -226,3 +226,42 @@ Cart milestone definition of done — verified:
 - Testing: `cart.test.tsx` (18) and `tests/e2e/cart.spec.ts` (desktop + mobile
   14) pass; each E2E starts from isolated mock state.
 - Realtime: not applicable by scope — deferred (ADR-013).
+
+Checkout/Orders milestone definition of done — verified:
+
+- Functional: guarded routes with login redirect (`/checkout`, `/order/$orderId`),
+  collector data, simulated wallet connect/refused/disconnect, network
+  mismatch guard, review summary, quote revalidation before confirmation with a
+  forced-review banner, order creation, pending → confirmed/rejected via
+  scenario-driven reads + polling, receipt, back-to-cart after rejection and
+  full empty-cart recovery states.
+- API: `POST /orders` with an `Idempotency-Key` header, server-side
+  revalidation (`stale_quote`, `availability_conflict`, `coupon_invalid`,
+  `coupon_expired`), `GET /orders/:orderId` with per-user isolation (403 for
+  another user → not found UX); Axios + TanStack Query for every call; MSW
+  scenarios `payment-confirmed`, `payment-rejected`, `order-timeout`;
+  `GET /orders/:orderId` advances pending orders deterministically.
+- Idempotency: the attempt store persists a stable attempt id per user; the
+  key is `checkout-<attemptId>`, stable across repeated clicks, the single 504
+  retry, and refresh; rotates only when totals change (verified in
+  `checkout-attempt.test.ts` and `checkout.test.tsx`).
+- Money: revalidated totals compared with `compareEthAmounts` (decimal), never
+  floating point; receipt renders the server snapshot verbatim.
+- State: cart and quote caches invalidated on confirmed orders; rejected and
+  pending orders keep the cart intact; expired session redirects to login and
+  private caches are cleared per session policy.
+- Visual: checkout page and order states verified at 390px and 1440px through
+  the Playwright mobile/desktop projects; shadcn primitives adapted to the
+  Kurio theme.
+- Accessibility: labelled wallet/network groups, `role="status"`/`role="alert"`
+  banners for revalidation and connection outcomes, keyboard-reachable controls,
+  focus-visible rings, error messages associated with fields.
+- Testing: `checkout.test.tsx` (11), `checkout-attempt.test.ts` (12),
+  `order-page.test.tsx` (7), `login.test.tsx` (7), and the E2E suites
+  `tests/e2e/checkout.spec.ts` (desktop + mobile) and
+  `tests/e2e/order-recovery.spec.ts` (desktop + mobile) pass; each E2E starts
+  from isolated mock state via `POST /api/__mock/reset` and selects scenarios
+  via `POST /api/__mock/scenario`.
+- Realtime: not used here — order status advances by scenario-driven reads +
+  polling (ADR-018); Socket.IO `order.updated` stays in the realtime milestone
+  (ADR-013).

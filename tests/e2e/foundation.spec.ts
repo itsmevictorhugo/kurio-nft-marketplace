@@ -2,13 +2,14 @@ import { expect, test } from '@playwright/test';
 
 test('loads the application shell', async ({ page }) => {
   const routes = [
-    ['/', 'Bem-vindo à Kurio'],
+    ['/', 'Seja dono do futuro da arte digital'],
     ['/nft/nft-aurora', 'Aurora Signal'],
+    ['/nfts/nft-aurora', 'Aurora Signal'],
     ['/cart', 'Seu carrinho está vazio'],
-    ['/checkout', 'Checkout'],
-    ['/order/foundation', 'Order confirmation'],
-    ['/order-confirmation', 'Order confirmation'],
-    ['/login', 'Login'],
+    ['/checkout', 'Entrar na sua conta'],
+    ['/order/foundation', 'Entrar na sua conta'],
+    ['/order-confirmation', 'Seja dono do futuro da arte digital'],
+    ['/login', 'Entrar na sua conta'],
     ['/register', 'Register'],
     ['/profile', 'Profile'],
     ['/wallets', 'Wallets'],

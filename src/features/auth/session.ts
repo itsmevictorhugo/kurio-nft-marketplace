@@ -3,17 +3,19 @@ import { queryClient } from '@/lib/query/query-client';
 const TOKEN_KEY = 'kurio-session-token';
 
 /**
- * Minimal session-token storage for the current milestone. Authentication UI
- * is a later task; this only gives already-issued tokens (from the mock API)
- * a place to live so authenticated resources can be exercised.
- *
- * On token change (login) or removal (logout/user switching) the private cart
- * and quotation caches are dropped so the next render reads the new
- * owner's data instead of a previous session's cached entries.
+ * Session-token storage for the mock session. On token change (login) or
+ * removal (logout/user switching) every private, per-session cache is dropped
+ * so the next render reads the new owner's data instead of a previous
+ * session's cached entries. Quotes are unauthenticated too, but they carry the
+ * requesting owner's cart contents, so they are private as well.
  */
 function purgePrivateQueries() {
   queryClient.removeQueries({ queryKey: ['cart'] });
   queryClient.removeQueries({ queryKey: ['quote'] });
+  queryClient.removeQueries({ queryKey: ['order'] });
+  queryClient.removeQueries({ queryKey: ['session'] });
+  queryClient.removeQueries({ queryKey: ['profile'] });
+  queryClient.removeQueries({ queryKey: ['wallets'] });
 }
 
 export function getSessionToken(): string | null {

@@ -692,6 +692,156 @@ Impact:
 CART-11/CART-12 in the test matrix remain explicitly unimplemented until the
 realtime milestone; they are marked rather than silently declared complete.
 
+### ADR-014 — Checkout and order routes guarded by a login redirect
+
+Context:
+`/checkout` and `/order/$orderId` require an authenticated session, and direct
+entry by an anonymous visitor must not expose private data.
+
+Decision:
+A single route guard covers the checkout and order-detail routes and redirects
+anonymous visitors to `/login?redirect=<target>`. The login page resolves only
+internal single-level paths after a successful login (never raw external URLs
+or query-bearing strings). When an authenticated query reports 401 during the
+flow, the checkout/order pages clear the token and re-enter the same guard.
+The foundation placeholder `/order-confirmation` now redirects to `/` because
+confirmed orders always land on `/order/$orderId`.
+
+Reason:
+One guard plus a validated redirect keeps the session policy explicit without
+duplicating protections across pages.
+
+Impact:
+Login accepts a `redirect` search param; the "/order-confirmation compatibility
+route" (ADR-001) is resolved rather than retained as a placeholder.
+
+### ADR-015 — Simulated wallet connection at checkout
+
+Context:
+The challenge simulates payment; there is no real wallet adapter or blockchain
+integration in the application.
+
+Decision:
+Wallet and network selection are local checkout state read from the wallets
+API. Connecting is simulated with the same transport the rest of the app uses:
+a 600 ms connecting phase, then connected; a refused outcome is available for
+failure coverage. Changing the selected wallet or network resets the
+connection. Confirmation requires a selected wallet, a network that matches the
+wallet's network, and a connected state.
+
+Reason:
+This matches the "simulated payment" requirement while keeping the block of
+state local, since a connection is not a server resource in the challenge.
+
+Impact:
+There is no wallet-side persistence; the simulated connection is checked only
+at the moment of confirmation and never leaves the checkout page.
+
+### ADR-016 — Quote revalidation and idempotency key rotation
+
+Context:
+The README requires revalidating quantity/price/coupon/fee before creating an
+order, and order creation must be idempotent so repeated confirm clicks,
+automatic retries, and page refreshes never create duplicates.
+
+Decision:
+The checkout flow keeps a persisted attempt per user
+(`kurio-checkout-attempt:<token>` in `sessionStorage`)
+containing a stable `attemptId`, the current quote id, coupon, and an exact
+copy of the four quote totals. Immediately before `POST /orders` the quote is
+refetched; if any monetary field or the coupon differs from the attempt, the
+attempt id is rotated and the user is asked to review ("Os valores foram
+atualizados. Revise e confirme novamente.") instead of confirming silently. The
+server remains authoritative: at order creation it revalidates coupon,
+availability and unit price (`coupon_invalid`/`coupon_expired`,
+`availability_conflict`, `stale_quote`, all 400/409). The idempotency key is
+`checkout-<attemptId>` — stable across repeated clicks, the single 504 retry,
+and refreshes; it rotates only when the confirmed totals change. The key is
+derived from the attempt id, never from the quote id, so a retried request
+reaches the existing order.
+
+Reason:
+The quote is the authoritative price snapshot (ADRs 003/010), and the attempt
+store gives the idempotency requirement an explicit, tested home instead of
+relying on query-cache behavior.
+
+Impact:
+Failed confirmations (rejected, timeout, conflicts) never clear the cart or the
+attempt; confirmed orders clear the attempt. Server-side, `POST /orders` maps
+a repeated key to the previously created order.
+
+### ADR-017 — Single-payment-order retry after a request timeout
+
+Context:
+The order-timeout scenario must recover without creating duplicates: the first
+`POST /orders` times out (504) only after the server has already stored the
+order and its idempotency record.
+
+Decision:
+`confirmCheckout` detects a 504 response and retries exactly once with the same
+idempotency key. Because the key is stable, the retry either returns the stored
+order or surfaces a real error. Any other failure is surfaced once, never
+silently retried. Query's automatic retry is disabled for this mutation so the
+flow's deliberate retry policy is the only retry policy in play.
+
+Reason:
+"Repeated attempts must not create duplicate orders" requires retrying with the
+same key, and the mock stores the key before responding 504 (see ADR-019).
+
+Impact:
+The order page polling (ADR-018) then advances the recovered order to its
+terminal status.
+
+### ADR-018 — Order status resolution by scenario-driven reads and polling
+
+Context:
+The realtime `order.updated` channel belongs to a later milestone, but the
+checkout/orders milestone must still resolve pending orders to confirmed or
+rejected and reconcile the cart.
+
+Decision:
+The mock transitions a pending order when it is read: `GET /orders/:orderId`
+applies the active scenario (`payment-confirmed` → confirmed,
+`payment-rejected` → rejected; `default` stays pending forever). The order page
+polls that endpoint every 3 s while the status is pending and stops once it
+reaches a terminal status. On `confirmed` the mock has already removed the
+purchased quantities from the server-side cart, and the order page invalidates
+the cart/quote caches so the UI reflects the new inventory.
+
+Reason:
+This is the smallest behavior that satisfies the status and cart-reconciliation
+requirements without simulating Socket.IO from UI code (the socket-only rule).
+
+Impact:
+Rejected and pending orders leave the cart intact (ORDER-10). The realtime
+milestone will replace the polling read with the Socket.IO event path.
+
+### ADR-019 — Mock persistence ordering corrected after E2E findings
+
+Context:
+E2E refresh-persistence tests exposed two bugs where the mock mutated shared
+state but serialized a stale snapshot, so a page reload regressed server state:
+the login handler persisted the database before `createSession()` (the fresh
+session disappeared after navigation), and the order read handler transitioned
+the order / emptied the cart without calling `persistMockDatabase()` (the
+transition and cart reconciliation were lost after a reload even though the
+order had confirmed).
+
+Decision:
+Every database-mutating handler persists after the mutation completes. The
+login handler creates the session (and merges the guest cart) before
+serializing; `GET /orders/:orderId` calls `persistMockDatabase()` immediately
+after `transitionOrderForScenario()`.
+
+Reason:
+The durable mock database (ADR-012) must be a faithful mirror of module state
+at every observable instant, or refresh-level E2E behavior diverges from the
+in-page behavior.
+
+Impact:
+Fixed in `domain-handlers.ts`; covered by the order-recovery and checkout
+refresh E2E scenarios.
+
 ---
 
 # 18. Figma Deviations
@@ -780,7 +930,11 @@ Current known limitations:
 - The durable mock database uses `sessionStorage`, which is scoped per tab. A
   new tab starts from the seed state, so cross-tab carts do not converge (a
   mock transport limitation, noted in ADR-012).
-- The login/register UI is not implemented yet; guest→user cart merge is
-  exercised through the API and the session-token placeholder in
-  `features/auth/session.ts`. The header cart badge refreshes from the
-  identity-aware cart query.
+- Order status advances through scenario-driven reads plus polling (ADR-018),
+  not through Socket.IO events, which are deferred to the realtime milestone.
+  When realtime lands, the `order.updated` channel replaces or augments the poll.
+- Login UI exists and is used by the checkout guard (ADR-014), but the
+  remaining authentication surface (registration UI, password recovery) and the
+  profile/wallets management pages are separate later milestones and remain not
+  implemented. Guest→user cart merge is exercised through the API and the mock
+  login handler.

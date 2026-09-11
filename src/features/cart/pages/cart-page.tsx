@@ -13,6 +13,7 @@ import {
 import { CartItemRow } from '@/features/cart/components/cart-item';
 import { CartSkeleton } from '@/features/cart/components/cart-skeleton';
 import { CartSummary } from '@/features/cart/components/cart-summary';
+import { clearAppliedCoupon, getAppliedCoupon, setAppliedCoupon } from '@/features/cart/applied-coupon';
 
 export function CartPage() {
   const navigate = useNavigate();
@@ -20,9 +21,15 @@ export function CartPage() {
   const items = cart.data?.items ?? [];
   const nftsById = useCartItemDetails(items.length ? items : undefined);
 
-  const [couponCode, setCouponCode] = useState<string | undefined>();
-  const applyCoupon = useCallback((code: string) => setCouponCode(code), []);
-  const removeCoupon = useCallback(() => setCouponCode(undefined), []);
+  const [couponCode, setCouponCode] = useState<string | undefined>(getAppliedCoupon);
+  const applyCoupon = useCallback((code: string) => {
+    setAppliedCoupon(code);
+    setCouponCode(code);
+  }, []);
+  const removeCoupon = useCallback(() => {
+    clearAppliedCoupon();
+    setCouponCode(undefined);
+  }, []);
   const quote = useQuote(couponCode);
   const lineTotalsById = useMemo(
     () => new Map((quote.data?.items ?? []).map((item) => [item.cartItemId, item.total])),
