@@ -11,8 +11,8 @@ export function NftCard({ nft, className }: NftCardProps) {
   return (
     <article className={cn('group', className)}>
       <Link
-        to="/nft/$id"
-        params={{ id: nft.id }}
+        to="/nfts/$nftId"
+        params={{ nftId: nft.id }}
         className="block rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-kurio-accent"
       >
         <div className="rounded-lg bg-kurio-surface p-2 transition-colors group-hover:bg-kurio-raised">

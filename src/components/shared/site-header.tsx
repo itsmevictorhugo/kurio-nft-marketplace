@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CartIcon, SearchIcon } from '@/components/shared/icons';
 
 const inactiveSections = ['Mercado', 'Criadores', 'Aprenda'] as const;
 
 export function SiteHeader() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const isDetail = location.pathname.startsWith('/nfts/');
 
   const updateSearch = (value: string) => {
     setSearchTerm(value);
@@ -33,7 +36,7 @@ export function SiteHeader() {
           <Link
             to="/"
             activeOptions={{ exact: true }}
-            className="rounded-sm border-b-2 border-kurio-accent px-1 pb-1 font-display text-xs font-bold tracking-wide text-kurio-accent outline-none transition-colors focus-visible:ring-2 focus-visible:ring-kurio-accent"
+            className={navClass(isDetail ? false : true)}
           >
             Início
           </Link>
@@ -41,7 +44,8 @@ export function SiteHeader() {
             <span
               key={section}
               aria-disabled="true"
-              className="cursor-default rounded-sm border-b-2 border-transparent px-1 pb-1 font-display text-xs font-bold tracking-wide text-kurio-cream"
+              aria-current={section === 'Mercado' && isDetail ? 'page' : undefined}
+              className={navClass(section === 'Mercado' && isDetail)}
             >
               {section}
             </span>
@@ -90,5 +94,12 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+function navClass(isActive: boolean) {
+  return cn(
+    'cursor-default rounded-sm border-b-2 px-1 pb-1 font-display text-xs font-bold tracking-wide',
+    isActive ? 'border-kurio-accent text-kurio-accent' : 'border-transparent text-kurio-cream',
   );
 }

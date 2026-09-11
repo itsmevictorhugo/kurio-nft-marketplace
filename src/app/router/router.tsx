@@ -1,14 +1,9 @@
-import {
-  createRootRoute,
-  createRoute,
-  createRouter,
-  parseSearchWith,
-  stringifySearchWith,
-} from '@tanstack/react-router';
+import { createRootRoute, createRoute, createRouter, parseSearchWith, redirect, stringifySearchWith } from '@tanstack/react-router';
 import { RootLayout } from '@/app/layouts/root-layout';
 import { RoutePlaceholder } from '@/components/shared/route-placeholder';
 import { HomePage } from '@/features/catalog/pages/home-page';
 import { validateCatalogSearch } from '@/features/catalog/search-params';
+import { NftDetailPage } from '@/features/nft/pages/nft-detail-page';
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -22,10 +17,18 @@ const homeRoute = createRoute({
   component: HomePage,
 });
 
+const nftDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/nfts/$nftId',
+  component: NftDetailPage,
+});
+
 const nftRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/nft/$id',
-  component: () => <RoutePlaceholder title="NFT detail" />, 
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: '/nfts/$nftId', params: { nftId: params.id } });
+  },
 });
 
 const cartRoute = createRoute({
@@ -78,6 +81,7 @@ const walletsRoute = createRoute({
 
 export const routeTree = rootRoute.addChildren([
   homeRoute,
+  nftDetailRoute,
   nftRoute,
   cartRoute,
   checkoutRoute,

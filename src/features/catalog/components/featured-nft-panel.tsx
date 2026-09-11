@@ -27,8 +27,8 @@ export function FeaturedNftPanel({ featured, isLoading }: FeaturedNftPanelProps)
       </p>
       <p className="mt-1 font-display text-base font-bold text-kurio-cream">Oferta limitada</p>
       <Link
-        to="/nft/$id"
-        params={{ id: featured.id }}
+        to="/nfts/$nftId"
+        params={{ nftId: featured.id }}
         className="mt-5 block outline-none focus-visible:ring-2 focus-visible:ring-kurio-accent focus-visible:ring-offset-2 focus-visible:ring-offset-kurio-surface"
       >
         <img

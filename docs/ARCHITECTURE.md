@@ -508,6 +508,83 @@ Impact:
 The reference screenshots under `public/design/` remain design references
 only. When real per-NFT assets arrive, only the seed mapping changes.
 
+### ADR-008 — NFT detail route and pre-auth identity scaffold
+
+Context:
+The detail milestone requires `/nfts/:nftId` (task-defined) while the
+foundation exposed a `/nft/$id` placeholder, and the favorites/cart APIs need
+an authenticated token or a stable guest identity before the authentication
+milestone exists.
+
+Decision:
+`/nfts/$nftId` is the canonical NFT detail route; `/nft/$id` redirects to it
+so the foundation link keeps working. Home cards and the featured panel link
+directly to `/nfts/$nftId`. Two tiny storage helpers were introduced without
+UI: `features/auth/session.ts` (session token in `localStorage`) and
+`features/cart/guest-id.ts` (persistent `X-Guest-Id` via `crypto.randomUUID`).
+The detail page resolves its request identity as "token if present, otherwise
+guest id", and favorites for guests intentionally call the real API so the
+401 contract drives the "entre para favoritar" feedback.
+
+Reason:
+Keeps the detail slice fully functional through the REST/MSW boundary without
+implementing authentication or a cart page ahead of schedule.
+
+Impact:
+The login milestone will replace the storage helpers' callers with the real
+session flow (login/logout/user switch must clear the token and private query
+caches). The guest id is per-browser, matching ADR-004; the shared
+`guest:default` fallback is never used by the app because the id is always
+generated.
+
+### ADR-009 — NFT Detail reference-aligned presentation
+
+Context:
+The NFT Detail Figma frames show edition pills as `1/18`, `1/58`, `1/1` and
+`ABERTA`, a metadata block with exactly `ID do token`, `Coleção` and
+`Atributos`, a detail tab with `Rede`/`Contrato`/`Direitos autorais` and rich
+pt-BR prose, and a mobile purchase block with price and a full-width
+"Comprar NFT" CTA. The initial implementation rendered hardcoded
+category/creator metadata and repeated the single desktop CTA on mobile.
+
+Decision:
+- `NftEdition` gains optional presentation-only `total`/`editionNumber`;
+  `available` and `maxPerOrder` remain the authoritative purchasing fields.
+- `Nft` gains optional `attributes: string[]`, a required `contract` and a
+  required presentation `tokenId`. Only the seed constructs `Nft` records, so
+  required fields are safe. `contract` is derived deterministically from
+  (collection, creator) — an FNV-1a fingerprint expanded via xorshift into 40
+  uppercase hex chars — and rendered truncated reference-style
+  (`0x7A42…19E8`) in the tab rail. `tokenId` is a seeded identifier shown in
+  the top "ID do token" row (Emerald seeded as `842`) and is intentionally
+  not derived from the database id.
+- The top metadata block renders only ID do token, Coleção and Atributos
+  (attributes from token data).
+- The detail tab renders token-data-driven pt-BR editorial prose and a right
+  rail limited to Rede, Contrato and Direitos autorais.
+- Desktop keeps stepper + "Comprar" + labeled favorite; mobile shows a
+  `md:hidden` block with stepper, price and a full-width "Comprar NFT" button.
+  Both CTAs share one handler and the single `aria-live` feedback paragraph.
+- The collection carousel reserves layout space while loading by rendering the
+  shared `NftCardSkeleton` grid and returns null only when the settled result
+  has zero related items.
+
+Reason:
+Matches the Figma composition without inventing product behavior, and keeps
+all appearance fields data-driven (seed-only) so the REST contract surface
+stays minimal.
+
+Alternatives considered:
+- Hardcoding the edition pills or `Atributos` string in the component
+  (rejected: duplicates seed data into components).
+- Reusing `available` to derive the edition size (rejected: equals remaining
+  stock, not the edition total).
+
+Impact:
+Only seed/domain/UI files change. REST contracts, cart/order semantics,
+favorite behavior and the existing loading/error/not-found states are
+unchanged.
+
 ---
 
 # 18. Figma Deviations
@@ -532,7 +609,42 @@ Impact:
 ...
 ```
 
-If there are no deviations:
+### Figma Deviation — NFT Detail emerald name vs token row
+
+Original:
+The reference emerald NFT shows `ID do token: #842` and the name
+`Emerald Ape #842`.
+
+Implemented:
+`Nft.tokenId` is a seeded presentation field; the Emerald NFT is seeded with
+`842`, so the detail row renders `#842`, matching the reference. The seeded
+`name` field still reads `Emerald Ape #042`, an inherited seed data mismatch
+with the token row.
+
+Reason:
+The corrective task specified seeding the Emerald token id (842) without
+changing the NFT name.
+
+Impact:
+The metadata row matches the Figma; the seeded name carries a different
+embedded number until the seed name is updated.
+
+### Figma Deviation — NFT Detail gallery thumbnails
+
+Original:
+The desktop reference shows a gallery with several distinct thumbnails.
+
+Implemented:
+Four thumbnails reuse the same single seed artwork (`nft.imageUrl`) because
+the mock supplies one image per NFT.
+
+Reason:
+The seed provides a single asset per NFT and no additional per-NFT artwork
+exists in the challenge assets.
+
+Impact:
+The thumbnail track behaves like the reference (selection, active state) but
+shows identical source images.
 
 ```text
 No intentional deviations currently recorded.

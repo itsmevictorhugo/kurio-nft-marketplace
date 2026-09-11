@@ -170,7 +170,9 @@ describe('home catalog', () => {
     const grid = await waitFor(() => getGrid());
     fireEvent.click(await within(grid).findByRole('link', { name: /aurora signal/i }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/nft/nft-aurora'));
-    expect(screen.getByText('NFT detail')).toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.pathname).toBe('/nfts/nft-aurora'));
+    expect(
+      await screen.findByRole('button', { name: 'Comprar' }),
+    ).toBeInTheDocument();
   });
 });

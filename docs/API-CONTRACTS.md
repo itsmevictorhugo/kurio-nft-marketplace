@@ -102,6 +102,28 @@ Query parameters must correspond to the URL search state.
 NFT records carry `price` and `imageUrl` as presentation-relevant fields; the
 mock seed supplies local artwork paths under `/assets/nft/`.
 
+Presentation-only fields introduced for the NFT Detail reference composition:
+
+```text
+Nft.attributes      optional string[]; token metadata traits rendered in the
+                    detail "Atributos" row (data-driven, seed-only).
+Nft.contract        mock collection contract address, deterministic per
+                    collection/creator, displayed truncated in the detail tab
+                    (e.g. 0x7A42…19E8). Presentation-only; no real blockchain
+                    behavior or on-chain state.
+Nft.tokenId         presentation token identifier rendered as "ID do token"
+                    (e.g. #842). Seeded per record; intentionally not derived
+                    from the database id/UUID.
+
+NftEdition.total          optional edition size (denominator of the X/Y
+                          edition pill).
+NftEdition.editionNumber  optional mint index (numerator of the X/Y edition
+                          pill).
+```
+
+`available` and `maxPerOrder` remain the authoritative purchasing fields;
+`total`/`editionNumber` are display-only and absent on open editions.
+
 Required behaviors:
 
 - success;

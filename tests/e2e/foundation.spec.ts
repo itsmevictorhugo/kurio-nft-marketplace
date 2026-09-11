@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test';
 
 test('loads the application shell', async ({ page }) => {
   const routes = [
-    ['/', 'Home'],
-    ['/nft/foundation', 'NFT detail'],
+    ['/', 'Bem-vindo à Kurio'],
+    ['/nft/nft-aurora', 'Aurora Signal'],
     ['/cart', 'Cart'],
     ['/checkout', 'Checkout'],
     ['/order/foundation', 'Order confirmation'],
