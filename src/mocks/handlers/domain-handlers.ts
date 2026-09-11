@@ -3,6 +3,7 @@ import {
   addEthAmounts,
   compareEthAmounts,
   ethAmount,
+  isEthAmount,
   multiplyEthAmount,
   percentageOfEthAmount,
   subtractEthAmounts,
@@ -182,12 +183,22 @@ export const domainHandlers = [
     const search = query.get('search')?.trim().toLowerCase();
     const category = query.get('category')?.trim().toLowerCase();
     const creator = query.get('creator')?.trim().toLowerCase();
+    const minPrice = query.get('minPrice');
+    const maxPrice = query.get('maxPrice');
+    const network = query.get('network')?.trim().toLowerCase();
     let items = getMockScenario() === 'empty-catalog' ? [] : [...getMockDatabase().nfts];
     if (search) {
       items = items.filter((nft) => `${nft.name} ${nft.collection} ${nft.creator}`.toLowerCase().includes(search));
     }
     if (category) items = items.filter((nft) => nft.category.toLowerCase() === category);
     if (creator) items = items.filter((nft) => nft.creator.toLowerCase() === creator);
+    if (network) items = items.filter((nft) => nft.network === network);
+    if (minPrice && isEthAmount(minPrice)) {
+      items = items.filter((nft) => compareEthAmounts(nft.price, minPrice) >= 0);
+    }
+    if (maxPrice && isEthAmount(maxPrice)) {
+      items = items.filter((nft) => compareEthAmounts(nft.price, maxPrice) <= 0);
+    }
     const sort = query.get('sort');
     if (sort === 'price-asc') items.sort((left, right) => compareEthAmounts(left.price, right.price));
     if (sort === 'price-desc') items.sort((left, right) => compareEthAmounts(right.price, left.price));

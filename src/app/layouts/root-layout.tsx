@@ -1,30 +1,23 @@
-import { Link, Outlet } from '@tanstack/react-router';
-
-const navigation = [
-  { to: '/', label: 'Home' },
-  { to: '/cart', label: 'Cart' },
-  { to: '/login', label: 'Login' },
-] as const;
+import { Outlet } from '@tanstack/react-router';
+import { MobileBottomNav } from '@/components/shared/mobile-bottom-nav';
+import { SiteFooter } from '@/components/shared/site-footer';
+import { SiteHeader } from '@/components/shared/site-header';
 
 export function RootLayout() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 px-4 py-4">
-        <nav aria-label="Foundation navigation" className="mx-auto flex max-w-6xl gap-4">
-          {navigation.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="rounded-sm text-sm font-medium text-slate-100 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-      <main id="main-content" className="mx-auto w-full max-w-6xl px-4 py-12">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-kurio-night font-display text-kurio-cream">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-kurio-flame focus:px-4 focus:py-2 focus:text-kurio-night"
+      >
+        Pular para o conteúdo
+      </a>
+      <SiteHeader />
+      <main id="main-content" className="flex-1">
         <Outlet />
       </main>
+      <SiteFooter />
+      <MobileBottomNav />
     </div>
   );
 }

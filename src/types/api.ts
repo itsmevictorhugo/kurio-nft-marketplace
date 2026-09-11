@@ -36,6 +36,9 @@ export interface CatalogQuery {
   sort?: 'name-asc' | 'price-asc' | 'price-desc';
   page?: number;
   pageSize?: number;
+  minPrice?: string;
+  maxPrice?: string;
+  network?: 'ethereum' | 'polygon' | 'solana';
 }
 
 export interface CatalogResponse {

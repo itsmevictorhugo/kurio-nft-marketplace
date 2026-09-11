@@ -455,6 +455,59 @@ Scenario effects are synchronous database mutations. Realtime-emitting
 scenarios will need to publish events through the Socket.IO mock transport
 when realtime is implemented; this decision does not cover that yet.
 
+### ADR-006 — Catalog URL state and sort presets
+
+Context:
+The Home catalog must represent search, filters, sorting and pagination in
+the URL, but the REST contract exposes only three sort values
+(`name-asc`, `price-asc`, `price-desc`) and no recency or network/price-range
+filters.
+
+Decision:
+Catalog state lives in TanStack Router search params validated by
+`validateCatalogSearch` (`search`, `category`, `creator`, `sort`, `page`).
+`page` is only serialized when greater than 1. Any filter/search/sort change
+resets `page`. The Home tabs are sort presets: "Todos os NFTs" (no sort),
+"Novos lançamentos" (`name-asc`) and "Em alta" (`price-desc`), sharing the
+same `sort` URL parameter as the sort select. Search input updates use
+history-replace to avoid one history entry per keystroke; filter clicks push.
+
+Reason:
+One URL-backed state representation prevents a second conflicting catalog
+state, and preset tabs reuse an existing API capability instead of inventing
+new sort semantics.
+
+Impact:
+Price-range and network filters are backed by the minimal `minPrice`,
+`maxPrice` and `network` catalog query parameters (see ADR-007 for the
+`network` domain field). Out-of-scope navigation (Mercado, Criadores,
+Aprenda, footer columns, editorial links) is rendered inertly rather than as
+fake links.
+
+### ADR-007 — NFT artwork assets
+
+Context:
+The Figma Home uses illustrated artwork. The challenge later supplied four
+real artwork assets (`nft-artwork-03/07/08/10.png`, 500×500), now served from
+`public/assets/nft/`. The mock domain previously carried no image data.
+
+Decision:
+`Nft` records carry a required `imageUrl` field, and the expanded seed maps
+each record to one of the four assets deterministically by visual coherence
+with its name (green jacket/sunglasses, purple hoodie/bucket hat, cream suit,
+golden headphones). Marketing-only sections (hero, banners, editorial) use a
+static asset map in `src/features/catalog/lib/artwork.ts` because they are
+not backed by NFT records. Cards, hero and the featured panel render real
+`<img>` elements with `object-cover` inside fixed aspect-ratio frames.
+
+Reason:
+Keeps artwork selection data-driven for NFT records (no per-component
+hardcoding) and keeps the data/UI boundary clean for future real assets.
+
+Impact:
+The reference screenshots under `public/design/` remain design references
+only. When real per-NFT assets arrive, only the seed mapping changes.
+
 ---
 
 # 18. Figma Deviations

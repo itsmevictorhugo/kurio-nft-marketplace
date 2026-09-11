@@ -19,6 +19,8 @@ export interface NftEdition {
   maxPerOrder: number;
 }
 
+export type NftNetwork = 'ethereum' | 'polygon' | 'solana';
+
 export interface Nft {
   id: string;
   name: string;
@@ -27,6 +29,8 @@ export interface Nft {
   category: string;
   description: string;
   price: EthAmount;
+  network: NftNetwork;
+  imageUrl: string;
   version: number;
   editions: NftEdition[];
 }

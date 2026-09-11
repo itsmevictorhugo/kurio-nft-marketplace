@@ -40,7 +40,7 @@ describe('mock REST domain', () => {
 
   it('filters, sorts, paginates, and reports missing NFT detail through REST', async () => {
     await expect(nftApi.list({ category: 'Digital Art', sort: 'price-desc', page: 1, pageSize: 1 })).resolves.toMatchObject({
-      total: 2,
+      total: 5,
       items: [{ id: 'nft-orbit' }],
     });
     await expect(nftApi.get('unknown')).rejects.toMatchObject({ response: { status: 404 } });

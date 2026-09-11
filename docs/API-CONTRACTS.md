@@ -85,12 +85,22 @@ GET /nfts/:id
 
 List request must support:
 
-- search;
-- filters;
-- sorting;
-- pagination.
+```text
+search      free-text search
+category    category filter
+creator     creator filter
+sort        name-asc | price-asc | price-desc
+page        1-based page number
+pageSize    page size (mock caps at 50)
+minPrice    minimum price in ETH (decimal string, inclusive)
+maxPrice    maximum price in ETH (decimal string, inclusive)
+network     ethereum | polygon | solana
+```
 
 Query parameters must correspond to the URL search state.
+
+NFT records carry `price` and `imageUrl` as presentation-relevant fields; the
+mock seed supplies local artwork paths under `/assets/nft/`.
 
 Required behaviors:
 

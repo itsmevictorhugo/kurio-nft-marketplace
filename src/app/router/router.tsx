@@ -1,16 +1,25 @@
-import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  parseSearchWith,
+  stringifySearchWith,
+} from '@tanstack/react-router';
 import { RootLayout } from '@/app/layouts/root-layout';
 import { RoutePlaceholder } from '@/components/shared/route-placeholder';
+import { HomePage } from '@/features/catalog/pages/home-page';
+import { validateCatalogSearch } from '@/features/catalog/search-params';
 
 const rootRoute = createRootRoute({
   component: RootLayout,
-  notFoundComponent: () => <RoutePlaceholder title="Page not found" />, 
+  notFoundComponent: () => <RoutePlaceholder title="Page not found" />,
 });
 
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: () => <RoutePlaceholder title="Home" />, 
+  validateSearch: validateCatalogSearch,
+  component: HomePage,
 });
 
 const nftRoute = createRoute({
@@ -67,7 +76,7 @@ const walletsRoute = createRoute({
   component: () => <RoutePlaceholder title="Wallets" />, 
 });
 
-const routeTree = rootRoute.addChildren([
+export const routeTree = rootRoute.addChildren([
   homeRoute,
   nftRoute,
   cartRoute,
@@ -80,7 +89,13 @@ const routeTree = rootRoute.addChildren([
   walletsRoute,
 ]);
 
-export const router = createRouter({ routeTree });
+// Catalog search params are plain strings; keep them out of the default
+// JSON-quote round-trip so URLs stay clean (?minPrice=2 instead of %222%22).
+export const router = createRouter({
+  routeTree,
+  stringifySearch: stringifySearchWith((value) => value),
+  parseSearch: parseSearchWith((value) => value),
+});
 
 declare module '@tanstack/react-router' {
   interface Register {
