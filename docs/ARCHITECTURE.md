@@ -689,8 +689,9 @@ Reason:
 simulating it with UI-driven cache changes would violate the socket-only rule.
 
 Impact:
-CART-11/CART-12 in the test matrix remain explicitly unimplemented until the
-realtime milestone; they are marked rather than silently declared complete.
+CART-11/CART-12 in the test matrix were pending until the realtime milestone;
+they are now covered by `realtime.spec.ts` through the real socket path
+(ADR-020) and are no longer simulated from UI code.
 
 ### ADR-014 — Checkout and order routes guarded by a login redirect
 
@@ -814,7 +815,8 @@ requirements without simulating Socket.IO from UI code (the socket-only rule).
 
 Impact:
 Rejected and pending orders leave the cart intact (ORDER-10). The realtime
-milestone will replace the polling read with the Socket.IO event path.
+milestone (ADR-020) adds the `order.updated` Socket.IO channel; the 3 s poll
+remains as a fallback when no live socket is available.
 
 ### ADR-019 — Mock persistence ordering corrected after E2E findings
 
@@ -841,6 +843,58 @@ in-page behavior.
 Impact:
 Fixed in `domain-handlers.ts`; covered by the order-recovery and checkout
 refresh E2E scenarios.
+
+### ADR-020 — Realtime synchronization over the Socket.IO transport
+
+Context:
+The realtime milestone requires NFT changes (and per-owner order changes) to
+reach an open UI over the real `socket.io-client` path, with duplicate or older
+events never regressing state, reconnects reconciling to REST truth, and
+per-session isolation. The mock exposes that transport through an MSW WebSocket
+interceptor (see `REALTIME-CONTRACTS.md`), so no event may be simulated from UI
+code.
+
+Decision:
+The application connects a single global Socket.IO client (transport
+`websocket`, path `/socket.io`, lazy-dynamic-imported so `engine.io-client`
+never captures the browser `WebSocket` global before MSW has replaced it) and
+announces itself per session (`session:hello` with the bearer token). One
+top-level `RealtimeSync` observer subscribes to `nft.updated` and
+`order.updated` and drives reconciliation:
+
+- Events carry a monotonic `version` (NFT or order) plus an `eventId`.
+  `shouldApplyRealtimeVersion` accepts only event versions strictly newer than
+  the last accepted version for that resource; duplicates and older events are
+  dropped before any cache activity.
+- Accepted events never write the query cache directly. They invalidate the
+  precise affected caches (`['nfts']`, `['quote']`, `['order', token, id]`) so
+  TanStack Query refetches the authoritative REST state. A stale/duplicate
+  event therefore cannot regress UI state, and a server that is not yet
+  terminal cannot contradict the latest REST read.
+- `order.updated` events are dropped when the payload does not belong to the
+  current session, so private events from a previous user never reach the
+  current session.
+- On transport reconnect the affected queries are revalidated once so the UI
+  converges to REST truth after gaps.
+
+The mock side follows the same rules: mock control endpoints
+(`POST /api/__mock/scenario`, `GET /orders/:orderId` transitions) broadcast
+real envelopes through the hub, never touching the application's query cache.
+
+Reason:
+REST stays authoritative (critical rules) while sockets deliver freshness;
+invalidation-delivered refetch preserves the `nft.version`/`order.version`
+ordering contract without a parallel manual cache system.
+
+Impact:
+`nft.updated` refreshes catalog/detail/cart; a stale quote blocks confirmation
+(RT-05); a pending order survives a disconnect and resolves once via
+`order.updated` (RT-06/09/10); duplicate/stale events are ignored (RT-07/08);
+logout/session changes tear down the old socket and route private events to the
+right session only (RT-11). The 3 s order polling (ADR-018) remains as a
+fallback for scenarios without an active socket. The mock scenario state is now
+persisted in `sessionStorage` (consistent with ADR-012) so scenario-driven
+flows survive full page reloads.
 
 ---
 
@@ -923,16 +977,24 @@ Do not hide known limitations.
 
 Current known limitations:
 
-- Realtime cart/quote synchronization is not implemented yet (deferred to the
-  realtime milestone, see ADR-013). Price/availability updates in the cart are
-  picked up by REST refetch only; `nft.updated` events do not yet drive the
-  cart. CART-11/CART-12 in `TEST-MATRIX.md` are marked pending.
+- Realtime events are consumed by invalidating the affected REST caches
+  (ADR-020), so the UI updates as fast as a refetch round-trip; the transport
+  itself is the real Socket.IO-over-MSW path, and duplicate/older events are
+  dropped by the version guard.
 - The durable mock database uses `sessionStorage`, which is scoped per tab. A
   new tab starts from the seed state, so cross-tab carts do not converge (a
-  mock transport limitation, noted in ADR-012).
-- Order status advances through scenario-driven reads plus polling (ADR-018),
-  not through Socket.IO events, which are deferred to the realtime milestone.
-  When realtime lands, the `order.updated` channel replaces or augments the poll.
+  mock transport limitation, noted in ADR-012). The active mock scenario is
+  persisted in the same way (ADR-020).
+- Order status advances through scenario-driven reads plus polling (ADR-018);
+  the `order.updated` Socket.IO channel (ADR-020) delivers the same transitions
+  when a live socket is open, and the poll remains as a fallback.
+- Session-change cleanup is validated as a test-observability limitation, not
+  a violation of the application behavior: on logout or session expiry the
+  previous authenticated socket is correctly torn down and the next session
+  reconnects isolated (RT-11). The current E2E validates that cleanup through
+  the session-expiry flow (a fresh authenticated request rejected with 401)
+  followed by a fresh isolated connection; it does not assert an observable
+  intermediate zero-connection window after a simulated server disconnect.
 - Login UI exists and is used by the checkout guard (ADR-014), but the
   remaining authentication surface (registration UI, password recovery) and the
   profile/wallets management pages are separate later milestones and remain not

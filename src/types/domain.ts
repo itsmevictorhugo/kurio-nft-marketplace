@@ -100,6 +100,7 @@ export interface Order {
   id: string;
   ownerId: string;
   status: OrderStatus;
+  version: number;
   items: OrderItem[];
   subtotal: EthAmount;
   discount: EthAmount;

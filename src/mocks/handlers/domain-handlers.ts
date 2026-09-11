@@ -20,6 +20,7 @@ import {
   removeSession,
 } from '@/mocks/database/mock-database';
 import { hashPassword } from '@/mocks/database/password';
+import { broadcastOrderUpdated, createRealtimeEnvelope } from '@/mocks/socket/hub';
 import { getMockScenario } from '@/mocks/scenarios';
 import type {
   AuthResponse,
@@ -92,9 +93,14 @@ function transitionOrderForScenario(order: Order) {
 
   order.status = nextStatus;
   order.updatedAt = FIXED_DATE;
+  order.version += 1;
   if (nextStatus === 'confirmed') {
     removePurchasedItems(order);
   }
+
+  // The state change is also published over the realtime channel so connected
+  // clients observe `order.updated` through the Socket.IO transport.
+  broadcastOrderUpdated(order.ownerId, createRealtimeEnvelope(order.id, order.version, { order }));
 }
 
 function orderFingerprint(quoteId: string) {
@@ -423,6 +429,7 @@ export const domainHandlers = [
       id: nextId('order'),
       ownerId: userId,
       status: 'pending',
+      version: 1,
       items: quote.items.map((item) => {
         const nft = getMockDatabase().nfts.find((candidate) => candidate.id === item.nftId)!;
         return {

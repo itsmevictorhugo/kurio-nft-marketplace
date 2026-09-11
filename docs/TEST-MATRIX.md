@@ -110,9 +110,13 @@ Implemented cart evidence:
   Every scenario starts from an isolated, deterministic mock state via
   `POST /api/__mock/reset`.
 
-CART-11 and CART-12 remain intentionally pending: they require the realtime
-milestone's Socket.IO path (see `ARCHITECTURE.md` ADR-013) and are not
-simulated from UI code.
+CART-12 is covered by the realtime milestone: a live `sold-out` event marks
+the edition unavailable in the cart with checkout blocked (`realtime.spec.ts`,
+RT-04). CART-11 is covered through the shared quotation mechanism: an
+`nft.updated` event invalidates the quote used by both the cart and the
+checkout review, and the refreshed totals (1.5 ETH / 2.378 ETH) are asserted in
+the checkout review flow (`realtime.spec.ts`, RT-05); the cart page consumes the
+same quote data, though the E2E does not assert the cart page totals directly.
 
 ---
 
@@ -152,7 +156,9 @@ Implemented checkout evidence:
   Every scenario starts from `POST /api/__mock/reset` and sets the scenario
   through `POST /api/__mock/scenario`.
 
-CHECK-12 depends on the realtime `order.updated` path and stays pending.
+CHECK-12 is covered by the realtime milestone: a stale quote is detected after
+a live `price-changed`/`nft.updated` event and the confirmation is blocked
+until the quote is re-accepted (`realtime.spec.ts`, RT-05).
 
 ---
 
@@ -230,6 +236,28 @@ Implemented order evidence:
 | RT-09 | Reconnection           | realtime.spec |
 | RT-10 | Pending order recovery | realtime.spec |
 | RT-11 | Session isolation      | realtime.spec |
+
+Implemented realtime evidence (`tests/e2e/realtime.spec.ts`, desktop + mobile):
+
+- RT-01/02 catalog price update without reload; RT-03 NFT detail price update;
+  RT-04 sold-out reflected in a loaded cart with checkout blocked.
+- RT-05 stale-quote detection after a real `nft.updated` event: confirmation
+  blocked, new totals shown, and a fresh `payment-confirmed` order completes.
+- RT-06/09/10 `order.updated` through the real Socket.IO path: pending order
+  survives a server disconnect, reconnect reconciliation recovers the same
+  order URL, a `payment-confirmed` scenario resolves it without duplicates.
+- RT-07/08 duplicate and older (stale) events are rejected by the version
+  guard without triggering any REST refetch.
+- RT-11 session-expiry cleanup: the old session's socket and private cache
+  are dropped, the next session reconnects isolated with no cross-user data.
+
+Vitest evidence:
+
+- `src/features/realtime/lib/version-guard.test.ts` (8 tests): accept on first
+  evidence, accept equal/newer versions, reject stale versions, and the stateful
+  tracker's monotonic memory.
+- `src/mocks/domain.test.ts`: order `version` increments from 1 on transition
+  (2 once terminal) and the sold-out scenario bumps the NFT version.
 
 ---
 

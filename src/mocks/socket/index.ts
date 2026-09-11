@@ -1,3 +1,2 @@
-export type RealtimeEventName = 'nft.updated' | 'order.updated';
-
-// A protocol-compatible MSW Socket.IO transport belongs here once realtime scenarios are implemented.
+export { realtimeServerHandlers } from '@/mocks/socket/hub';
+export type { RealtimeEventName } from '@/types/realtime';

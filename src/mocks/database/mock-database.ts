@@ -270,11 +270,11 @@ export function nextId(kind: keyof MockDatabase['counters']) {
 export function applyMockScenario(scenario: MockScenarioName) {
   const database = getMockDatabase();
   if (scenario === 'sold-out') {
-    const edition = database.nfts
-      .find((nft) => nft.id === 'nft-aurora')
-      ?.editions.find((item) => item.id === 'aurora-standard');
+    const nft = database.nfts.find((item) => item.id === 'nft-aurora');
+    const edition = nft?.editions.find((item) => item.id === 'aurora-standard');
     if (edition) {
       edition.available = 0;
+      nft!.version += 1;
     }
   }
 

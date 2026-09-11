@@ -205,3 +205,39 @@ Realtime Playwright tests must exercise:
 - NFT price/availability updates.
 
 Do not bypass the socket layer in tests.
+
+---
+
+# 12. Implementation Notes
+
+Concrete transport added by the realtime milestone (see `ARCHITECTURE.md`
+ADR-020):
+
+- Connection: one application-wide Socket.IO client (`socket.io-client`,
+  `transports: ['websocket']`, path `/socket.io`) lazy-dynamic-imported so
+  `engine.io-client` never captures the browser `WebSocket` global before MSW
+  has patched it. The mock intercepts it on the MSW `ws://*` handler.
+- Handshake: on connect the client emits `session:hello` with the bearer token;
+  the mock routes `order.updated` only to the connection announcing that
+  session, so private events are session-isolated.
+- Envelopes: `{ eventId, resourceId, version, payload }`. `nft.updated`
+  payloads carry the full NFT (`{ nft }`); `order.updated` payloads carry the
+  full order (`{ order }`). Versions are incremented by the mock on every
+  change (NFT price/availability and order transitions).
+- Consumption: accepted events invalidate the precise affected REST caches
+  (`nft`/`order`/`quote`), never the query cache directly; stale/duplicate
+  events are dropped before any cache activity. On reconnect the affected
+  queries are revalidated once to converge with REST.
+- Mock control endpoints drive real emitted events:
+  - `POST /api/__mock/scenario` — selects the active scenario and emits the
+    matching real `nft.updated` (price-changed/sold-out) over the transport;
+  - `GET /orders/:orderId` transitions apply `payment-confirmed`/`payment-
+    rejected` and broadcast `order.updated` to the owning session;
+  - `POST /api/__mock/socket/emit` — injects an arbitrary envelope for
+    duplicate/stale/ordering tests;
+  - `POST /api/__mock/socket/disconnect` — closes the server side of every
+    open connection to exercise reconnection;
+  - `GET /api/__mock/socket/connections` — reports the current connection
+    count for test assertions.
+- The active mock scenario is persisted in `sessionStorage` so scenario-driven
+  flows survive full page reloads (consistent with `ADR-012`).

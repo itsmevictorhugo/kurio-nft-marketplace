@@ -99,9 +99,17 @@ test('recovers the order after a payment timeout without creating duplicates', a
   await expect(page.getByRole('link', { name: 'Tide Archive', exact: true })).toBeVisible();
 
   // The same recovered order transitions to confirmed once the scenario changes.
+  // The order page also polls every 3 s while pending (ADR-018), so the manual
+  // "Atualizar status" click may lose the race to an automatic poll under
+  // load; both paths must converge to the same confirmed order.
   await page.goto(orderUrl);
   await setScenario(page, 'payment-confirmed');
-  await page.getByRole('button', { name: 'Atualizar status' }).click();
+  const updateStatus = page.getByRole('button', { name: 'Atualizar status' });
+  try {
+    await updateStatus.click({ timeout: 5000 });
+  } catch {
+    // the automatic poll already drove the transition — same authoritative GET
+  }
 
   await expect(page.getByText('Pagamento confirmado', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Pagamento confirmado!' })).toBeVisible();

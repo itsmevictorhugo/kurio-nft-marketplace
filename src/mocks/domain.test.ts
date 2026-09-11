@@ -85,12 +85,12 @@ describe('mock REST domain', () => {
     const first = await ordersApi.create(ada.session.token, { quoteId: quote.quote.id }, 'order-key-1');
     const retry = await ordersApi.create(ada.session.token, { quoteId: quote.quote.id }, 'order-key-1');
 
-    expect(first.order).toMatchObject({ status: 'pending' });
+    expect(first.order).toMatchObject({ status: 'pending', version: 1 });
     expect(retry.order.id).toBe(first.order.id);
 
     selectMockScenario('payment-confirmed');
     await expect(ordersApi.get(ada.session.token, first.order.id)).resolves.toMatchObject({
-      order: { status: 'confirmed' },
+      order: { status: 'confirmed', version: 2 },
     });
     await expect(cartApi.get({ token: ada.session.token })).resolves.toMatchObject({
       cart: { items: [] },
@@ -166,6 +166,17 @@ describe('mock REST domain', () => {
         expect.objectContaining({ nftId: 'nft-tide', editionId: 'tide-open', quantity: 1 }),
       ]),
     );
+  });
+
+  it('bumps the NFT version when a realtime scenario mutates the catalog', () => {
+    const aurora = getMockDatabase().nfts.find((item) => item.id === 'nft-aurora')!;
+    const before = aurora.version;
+
+    selectMockScenario('sold-out');
+
+    const after = getMockDatabase().nfts.find((item) => item.id === 'nft-aurora')!;
+    expect(after.editions.find((item) => item.id === 'aurora-standard')!.available).toBe(0);
+    expect(after.version).toBe(before + 1);
   });
 
   it('adds guest quantities within availability limits when merging carts at login', async () => {

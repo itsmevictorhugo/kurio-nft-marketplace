@@ -2,6 +2,30 @@ import { queryClient } from '@/lib/query/query-client';
 
 const TOKEN_KEY = 'kurio-session-token';
 
+type SessionChangeListener = (token: string | null) => void;
+
+const sessionChangeListeners = new Set<SessionChangeListener>();
+
+/**
+ * Subscribes to session token changes (login, logout and user switching).
+ * The realtime layer uses this to tear down the previous session's socket
+ * subscriptions and reconnect with the new session, so private events from a
+ * previous user can never reach the current one.
+ */
+export function onSessionChange(listener: SessionChangeListener): () => void {
+  sessionChangeListeners.add(listener);
+  return () => {
+    sessionChangeListeners.delete(listener);
+  };
+}
+
+function notifySessionChange() {
+  const token = getSessionToken();
+  for (const listener of [...sessionChangeListeners]) {
+    listener(token);
+  }
+}
+
 /**
  * Session-token storage for the mock session. On token change (login) or
  * removal (logout/user switching) every private, per-session cache is dropped
@@ -33,6 +57,7 @@ export function setSessionToken(token: string): void {
     // storage unavailable: token stays memory-only for this page life
   }
   purgePrivateQueries();
+  notifySessionChange();
 }
 
 export function clearSessionToken(): void {
@@ -42,4 +67,5 @@ export function clearSessionToken(): void {
     // ignore
   }
   purgePrivateQueries();
+  notifySessionChange();
 }

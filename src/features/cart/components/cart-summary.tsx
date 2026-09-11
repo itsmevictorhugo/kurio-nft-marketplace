@@ -69,7 +69,7 @@ export function CartSummary({
   };
 
   const hasItems = quote.data?.items.length !== undefined && quote.data.items.length > 0;
-  const quoteReady = Boolean(quote.data && hasItems);
+  const quoteReady = Boolean(quote.data && hasItems && !quote.isError);
   const quoteBlocked = Boolean(couponCode && quote.isError);
 
   const discount = quote.data?.discount;

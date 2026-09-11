@@ -198,7 +198,7 @@ evidence is recorded.
 | Favorites            | PENDING   | API-driven from detail; dedicated favorites UI pending |
 | Checkout/Orders      | DONE      | `src/features/checkout/*`, `src/features/orders/*`, `checkout.test.tsx`, `checkout-attempt.test.ts`, `order-page.test.tsx`, `tests/e2e/checkout.spec.ts`, `tests/e2e/order-recovery.spec.ts` (desktop + mobile) |
 | Profile/Wallets      | PENDING   | read-side hooks used by checkout; management UI pending |
-| Realtime             | PENDING   | Socket.IO milestone not started; cart realtime explicitly deferred (ADR-013) |
+| Realtime             | DONE      | `src/features/realtime/*` (version guard + `RealtimeSync`), `src/mocks/socket/*` hub over the MSW `ws` transport, `realtime.spec.ts` (desktop + mobile, RT-01..11), `version-guard.test.ts` (8) |
 | Accessibility suite  | PENDING   | `accessibility.spec` not yet written; per-component a11y verified in Vitest/E2E |
 | Visual regression    | PENDING   | baselines for Home/NFT Detail/Cart not yet committed |
 | Lighthouse           | PENDING   | audit config and report pending |
@@ -265,3 +265,34 @@ Checkout/Orders milestone definition of done — verified:
 - Realtime: not used here — order status advances by scenario-driven reads +
   polling (ADR-018); Socket.IO `order.updated` stays in the realtime milestone
   (ADR-013).
+
+Realtime milestone definition of done — verified:
+
+- Functional: a live `nft.updated` refreshes the catalog, NFT detail and cart;
+  a sold-out edition blocks checkout; a stale quote is detected and the
+  confirmation is blocked until re-accepted; a pending order survives a
+  disconnect, is recovered after reconnect and resolves (confirmed) exactly
+  once via `order.updated`; duplicate and stale events are rejected without any
+  REST refetch; session expiry tears down the previous session's socket and
+  cache and the next session is isolated.
+- API/transport: the real `socket.io-client` path over the MSW
+  `ws` transport + `@mswjs/socket.io-binding`; the mock hub broadcasts real
+  envelopes; mock control endpoints (`/api/__mock/scenario`,
+  `/api/__mock/socket/emit`, `/api/__mock/socket/disconnect`,
+  `/api/__mock/socket/connections`) drive the transport; MSW is the only
+  network mocking boundary and no UI code simulates events.
+- Ordering: every envelope carries `eventId`/`resourceId`/`version`; the
+  version guard applies only strictly newer events and drops duplicates/older
+  ones (`version-guard.test.ts`, 8 tests); REST refetch after invalidations is
+  authoritative and can never regress state.
+- State: accepted events invalidate precise caches (`nft`, `order`, `quote`);
+  `order.updated` events for another session are dropped; React Query cache is
+  never written by the mock layer.
+- Money: totals continue to render verbatim from the revalidated quote;
+  `compareEthAmounts` guards the stale-quote detection.
+- Realtime/a11y: realtime feedback announces the forced-review values banner
+  (`role="status"`); the sold-out and pending states remain accessible.
+- Testing: `tests/e2e/realtime.spec.ts` RT-01..11 (desktop + mobile, 14) pass;
+  `version-guard.test.ts` (8) and the extended `mocks/domain.test.ts` version
+  assertions pass; every E2E starts from isolated mock state and drives events
+  through the real transport (no test calls app realtime handlers directly).
