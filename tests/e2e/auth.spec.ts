@@ -296,12 +296,9 @@ test.describe('Logout', () => {
 
     await page.getByRole('menuitem', { name: 'Sair' }).click();
 
-    await expect(
-      page
-        .getByRole('button', { name: /Menu do usuário/i })
-        .locator(':visible')
-        .first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('link', { name: 'Entrar' })).toBeVisible({
+      timeout: 5000,
+    });
 
     await page.goto('/cart');
 
