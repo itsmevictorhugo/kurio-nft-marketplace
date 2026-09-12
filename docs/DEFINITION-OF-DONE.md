@@ -195,11 +195,11 @@ evidence is recorded.
 | Catalog + NFT Detail | DONE      | `catalog.spec`, `nft.spec` equivalents in Vitest (`catalog.test.tsx`, `nft-detail.test.tsx`) |
 | Cart                 | DONE      | `src/features/cart/*`, `cart.test.tsx`, `tests/e2e/cart.spec.ts` (desktop + mobile) |
 | Authentication       | DONE      | `src/features/auth/*` (register page, session infrastructure, logout helper), `register.test.tsx` (6), `login.test.tsx` (7), `session.ts` (logout + bus), `api-client.ts` (401 interceptor), `site-header.tsx` + `mobile-bottom-nav.tsx` (authenticated state), `tests/e2e/auth.spec.ts` (desktop + mobile, AUTH-01..08) |
-| Favorites            | PENDING   | API-driven from detail; dedicated favorites UI pending |
+| Favorites            | DONE      | Detail toggle (`src/features/nft/hooks/use-favorite-toggle.ts`, toggled in `nft-detail.test.tsx`, guest gate with API feedback); persistence and per-user isolation in `src/mocks/domain.test.ts`; no dedicated favorites page (out of README scope) |
 | Checkout/Orders      | DONE      | `src/features/checkout/*`, `src/features/orders/*`, `checkout.test.tsx`, `checkout-attempt.test.ts`, `order-page.test.tsx`, `tests/e2e/checkout.spec.ts`, `tests/e2e/order-recovery.spec.ts` (desktop + mobile) |
-| Profile/Wallets      | PENDING   | read-side hooks used by checkout; management UI pending |
+| Profile/Wallets      | DONE      | `src/features/profile` + `src/features/wallets`; domain updates in `src/mocks/domain.test.ts`; E2E `tests/e2e/profile-wallets.spec.ts` (desktop + mobile, PROFILE-01..06 / WALLET-01..06) |
 | Realtime             | DONE      | `src/features/realtime/*` (version guard + `RealtimeSync`), `src/mocks/socket/*` hub over the MSW `ws` transport, `realtime.spec.ts` (desktop + mobile, RT-01..11), `version-guard.test.ts` (8) |
-| Accessibility suite  | PENDING   | `accessibility.spec` not yet written; per-component a11y verified in Vitest/E2E |
+| Accessibility suite  | DONE      | a11y behaviors verified in component tests and functional E2E (labels, keyboard-reachable controls, focus trap, visible focus, `role="status"`/`role="alert"` feedback, state not only by color); no dedicated `accessibility.spec` exists — that gap is kept explicit in `docs/TEST-MATRIX.md` §12 |
 | Visual regression    | DONE      | 4 cases (Home, NFT Detail, Cart, Payment) × viewports 390/768/1440 = 12 real `toHaveScreenshot()` comparisons via Playwright; versioned baselines under `tests/e2e/visual.spec.ts-snapshots/` |
 | Lighthouse           | DONE      | Lighthouse 13.4.1 audit of Home + NFT Detail on mobile + desktop, 3 runs per scenario (12 total), medians ≥ targets (P≥90, A≥95, BP≥95, SEO≥90); HTML/JSON reports + `summary.json` under `reports/lighthouse/`; versioned script `scripts/lighthouse/audit.mjs` |
 

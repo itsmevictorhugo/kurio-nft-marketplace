@@ -10,32 +10,64 @@ The README remains authoritative.
 
 ## 2. Catalog
 
-| ID     | Requirement            | Test            |
-| ------ | ---------------------- | --------------- |
-| CAT-01 | Search                 | catalog.spec    |
-| CAT-02 | Combined filters       | catalog.spec    |
-| CAT-03 | Sorting                | catalog.spec    |
-| CAT-04 | Pagination             | catalog.spec    |
-| CAT-05 | URL persistence        | catalog.spec    |
-| CAT-06 | Browser history        | catalog.spec    |
-| CAT-07 | Empty results          | catalog.spec    |
-| CAT-08 | API failure            | catalog.spec    |
-| CAT-09 | Out-of-order responses | resilience.spec |
+| ID     | Requirement            | Test                                                      |
+| ------ | ---------------------- | --------------------------------------------------------- |
+| CAT-01 | Search                 | catalog.test.tsx (Vitest)                                 |
+| CAT-02 | Combined filters       | catalog.test.tsx (Vitest)                                 |
+| CAT-03 | Sorting                | catalog.test.tsx (Vitest)                                 |
+| CAT-04 | Pagination             | catalog.test.tsx (Vitest)                                 |
+| CAT-05 | URL persistence        | catalog.test.tsx (Vitest) + E2E route/reload (foundation.spec.ts) |
+| CAT-06 | Browser history        | não coberto por teste automatizado                        |
+| CAT-07 | Empty results          | catalog.test.tsx (Vitest)                                 |
+| CAT-08 | API failure            | catalog.test.tsx (Vitest)                                 |
+| CAT-09 | Out-of-order responses | não coberto por teste automatizado para REST             |
+
+Implemented catalog evidence:
+
+- `src/features/catalog/catalog.test.tsx` (Vitest, 11): search term in the URL
+  and results, pagination reset on filter change, sort preset in the URL,
+  second catalog page from the URL, network/maximum/minimum price filters
+  through the URL, empty state with URL restoration, error state recovered
+  through retry, real artwork assets, and card navigation to the NFT detail
+  route.
+- `src/mocks/domain.test.ts` (Vitest): filter, sort, pagination and missing
+  NFT detail through the REST mock domain.
+- Direct access to the detail page and reload are exercised by
+  `tests/e2e/foundation.spec.ts` and the public smoke suite; there is no
+  catalog-specific E2E spec.
+- No dedicated `catalog.spec.ts` or `resilience.spec.ts` exists. CAT-06
+  (browser back/forward restore) and CAT-09 (out-of-order REST responses) have
+  no dedicated automated test; ordering protection is enforced at the realtime
+  layer by the version guard (RT-07/08), not for REST reads.
 
 ---
 
 ## 3. NFT Detail
 
-| ID     | Requirement         | Test           |
-| ------ | ------------------- | -------------- |
-| NFT-01 | Direct access       | nft.spec       |
-| NFT-02 | Gallery             | nft.spec       |
-| NFT-03 | NFT information     | nft.spec       |
-| NFT-04 | Edition             | nft.spec       |
-| NFT-05 | Quantity limit      | nft.spec       |
-| NFT-06 | Not found           | nft.spec       |
-| NFT-07 | Unavailable edition | nft.spec       |
-| NFT-08 | Favorite            | favorites.spec |
+| ID     | Requirement         | Test                                                             |
+| ------ | ------------------- | ---------------------------------------------------------------- |
+| NFT-01 | Direct access       | tests/e2e/foundation.spec.ts + public smoke suit (E2E)           |
+| NFT-02 | Gallery             | nft-detail.test.tsx (Vitest, conteúdo) + visual.spec (E2E)       |
+| NFT-03 | NFT information     | nft-detail.test.tsx (Vitest)                                     |
+| NFT-04 | Edition             | nft-detail.test.tsx (Vitest)                                     |
+| NFT-05 | Quantity limit      | nft-detail.test.tsx (Vitest) + cart.spec.ts (E2E, limite por pedido) |
+| NFT-06 | Not found           | nft-detail.test.tsx (Vitest)                                     |
+| NFT-07 | Unavailable edition | nft-detail.test.tsx (Vitest) + realtime.spec.ts RT-04 (E2E)      |
+| NFT-08 | Favorite            | nft-detail.test.tsx (Vitest) → §5 Favorites                      |
+
+Implemented NFT detail evidence:
+
+- `src/features/nft/nft-detail.test.tsx` (Vitest, 15 + 4 `it.each` sub-cases):
+  loading skeleton, not-found state, error + retry, sold-out state, quantity
+  clamp, mobile purchase block, reference-aligned metadata rows, contract in
+  truncated reference style, ABERTA edition pill, emerald attributes with
+  seeded token id, favorite toggle, guest favorite feedback, add to guest cart,
+  availability-conflict recovery, and duplicate-click protection.
+- `tests/e2e/foundation.spec.ts` visits the detail page by direct URL and
+  reloads it; the public smoke suite asserts direct-URL + refresh against the
+  deployed build.
+- Gallery thumbnails have no dedicated interaction test (rendering is covered
+  by the unit content tests and the NFT detail visual baseline).
 
 ---
 
@@ -74,13 +106,24 @@ Implemented authentication evidence:
 
 ## 5. Favorites
 
-| ID     | Requirement            | Test           |
-| ------ | ---------------------- | -------------- |
-| FAV-01 | Add favorite           | favorites.spec |
-| FAV-02 | Remove favorite        | favorites.spec |
-| FAV-03 | Persistence            | favorites.spec |
-| FAV-04 | Optimistic update      | favorites.spec |
-| FAV-05 | Rollback after failure | favorites.spec |
+| ID     | Requirement            | Test                                                          |
+| ------ | ---------------------- | ------------------------------------------------------------- |
+| FAV-01 | Add favorite           | nft-detail.test.tsx (Vitest)                                  |
+| FAV-02 | Remove favorite        | nft-detail.test.tsx (Vitest)                                  |
+| FAV-03 | Persistence            | domain.test.ts (Vitest, isolamento por usuário)               |
+| FAV-04 | Optimistic update      | não aplicável (toggle server-gated: feedback após a resposta da API) |
+| FAV-05 | Rollback after failure | sem teste automatizado dedicado                               |
+
+Implemented favorites evidence:
+
+- `src/features/nft/nft-detail.test.tsx`: toggles a favorite for an
+  authenticated user; surfaces the API feedback when a guest tries to favorite.
+- `src/mocks/domain.test.ts`: favorites persist and are isolated per
+  authenticated user (Ada vs Lin).
+- The toggle is server-gated (`use-favorite-toggle.ts` drives the mock API and
+  invalidates `['favorites']`), so there is no optimistic UI to roll back; a
+  mutation failure is surfaced through the returned `error`/`resetError`.
+- No dedicated `favorites.spec.ts` E2E exists.
 
 ---
 
@@ -206,27 +249,45 @@ Implemented order evidence:
 
 ## 9. Profile
 
-| ID         | Requirement               | Test         |
-| ---------- | ------------------------- | ------------ |
-| PROFILE-01 | View profile              | profile.spec |
-| PROFILE-02 | Edit profile              | profile.spec |
-| PROFILE-03 | Avatar                    | profile.spec |
-| PROFILE-04 | Password change           | profile.spec |
-| PROFILE-05 | Validation errors         | profile.spec |
-| PROFILE-06 | Persistence after refresh | profile.spec |
+| ID         | Requirement               | Test                       |
+| ---------- | ------------------------- | -------------------------- |
+| PROFILE-01 | View profile              | profile-wallets.spec.ts (E2E) |
+| PROFILE-02 | Edit profile              | profile-wallets.spec.ts (E2E) |
+| PROFILE-03 | Avatar                    | profile-wallets.spec.ts (E2E) |
+| PROFILE-04 | Password change           | profile-wallets.spec.ts (E2E) |
+| PROFILE-05 | Validation errors         | profile-wallets.spec.ts (E2E) |
+| PROFILE-06 | Persistence after refresh | profile-wallets.spec.ts (E2E) |
+
+Implemented profile evidence:
+
+- `tests/e2e/profile-wallets.spec.ts` (desktop + mobile): PROFILE-01..06 view,
+  edit, avatar, password change, validation and persistence after refresh, plus
+  the auth guard redirect.
+- `src/mocks/domain.test.ts`: profile updates through the REST mock domain.
+- No dedicated `profile.spec.ts` exists; the E2E file is
+  `tests/e2e/profile-wallets.spec.ts`.
 
 ---
 
 ## 10. Wallets
 
-| ID        | Requirement       | Test         |
-| --------- | ----------------- | ------------ |
-| WALLET-01 | List wallets      | wallets.spec |
-| WALLET-02 | Primary wallet    | wallets.spec |
-| WALLET-03 | Secondary wallet  | wallets.spec |
-| WALLET-04 | Add wallet        | wallets.spec |
-| WALLET-05 | Edit wallet       | wallets.spec |
-| WALLET-06 | Validation errors | wallets.spec |
+| ID        | Requirement       | Test                       |
+| --------- | ----------------- | -------------------------- |
+| WALLET-01 | List wallets      | profile-wallets.spec.ts (E2E) |
+| WALLET-02 | Primary wallet    | profile-wallets.spec.ts (E2E) |
+| WALLET-03 | Secondary wallet  | profile-wallets.spec.ts (E2E) |
+| WALLET-04 | Add wallet        | profile-wallets.spec.ts (E2E) |
+| WALLET-05 | Edit wallet       | profile-wallets.spec.ts (E2E) |
+| WALLET-06 | Validation errors | profile-wallets.spec.ts (E2E) |
+
+Implemented wallets evidence:
+
+- `tests/e2e/profile-wallets.spec.ts` (desktop + mobile): WALLET-01..06 list,
+  add, edit, primary selection, validation errors and empty state, plus the
+  auth guard redirect.
+- `src/mocks/domain.test.ts`: wallet updates through the REST mock domain.
+- No dedicated `wallets.spec.ts` exists; the E2E file is
+  `tests/e2e/profile-wallets.spec.ts`.
 
 ---
 
@@ -272,28 +333,58 @@ Vitest evidence:
 
 ## 12. Accessibility
 
-| ID      | Requirement         | Test               |
-| ------- | ------------------- | ------------------ |
-| A11Y-01 | Keyboard navigation | accessibility.spec |
-| A11Y-02 | Visible focus       | accessibility.spec |
-| A11Y-03 | Dialog focus        | accessibility.spec |
-| A11Y-04 | Form validation     | accessibility.spec |
-| A11Y-05 | Accessible feedback | accessibility.spec |
-| A11Y-06 | Drawer focus        | accessibility.spec |
+| ID      | Requirement         | Test                                                        |
+| ------- | ------------------- | ----------------------------------------------------------- |
+| A11Y-01 | Keyboard navigation | sem spec dedicado; coberto em Vitest/E2E funcional          |
+| A11Y-02 | Visible focus       | sem spec dedicado; coberto em Vitest/E2E funcional          |
+| A11Y-03 | Dialog focus        | sem spec dedicado; coberto no dropdown (auth) em Vitest/E2E |
+| A11Y-04 | Form validation     | auth/register/profile/wallets E2E + Vitest                  |
+| A11Y-05 | Accessible feedback | `role="status"`/`role="alert"` verificado em Vitest/E2E     |
+| A11Y-06 | Drawer focus        | sem teste automatizado dedicado (mobile nav/stepper)        |
+
+Implemented accessibility evidence:
+
+- No dedicated `accessibility.spec.ts` exists. Accessibility behaviors are
+  verified inside existing component tests and functional E2E: labels and
+  validation messages (`register.test.tsx`, `login.test.tsx`, profile and
+  wallet E2E), keyboard-accessible dropdown menu with focus trap and visible
+  focus (`auth.spec.ts`), `role="status"`/`role="alert"` feedback for
+  mutations and realtime changes (`cart.test.tsx`, `realtime.spec.ts`), and
+  state never conveyed only by color (cart/availability states). These verify
+  behavior but are not a dedicated keyboard/focus E2E pass; that remains an
+  explicit, unautomated gap.
 
 ---
 
 ## 13. Resilience
 
-| ID     | Requirement      | Test            |
-| ------ | ---------------- | --------------- |
-| RES-01 | Slow network     | resilience.spec |
-| RES-02 | Variable latency | resilience.spec |
-| RES-03 | Network failure  | resilience.spec |
-| RES-04 | HTTP 4xx         | resilience.spec |
-| RES-05 | HTTP 5xx         | resilience.spec |
-| RES-06 | Retry/recovery   | resilience.spec |
-| RES-07 | Skeletons        | resilience.spec |
+| ID     | Requirement      | Test                                                        |
+| ------ | ---------------- | ----------------------------------------------------------- |
+| RES-01 | Slow network     | nft-detail.test.tsx / cart.test.tsx (delay msw inline)      |
+| RES-02 | Variable latency | cart.test.tsx / nft-detail.test.tsx (50–150 ms inline)      |
+| RES-03 | Network failure  | cart.test.tsx (rollback de update falho)                    |
+| RES-04 | HTTP 4xx         | cart/nft (409 availability), auth.spec (401), domain.test (cupom/403) |
+| RES-05 | HTTP 5xx         | order-recovery.spec.ts (504/order-timeout)                  |
+| RES-06 | Retry/recovery   | catalog.test.tsx (retry) + checkout/order-recovery (retry idempotente) |
+| RES-07 | Skeletons        | cart.test.tsx / nft-detail.test.tsx (loading skeleton)      |
+
+Implemented resilience evidence:
+
+- No dedicated `resilience.spec.ts` exists. Slow/variable latency is exercised
+  with inline `msw` `delay()` in `cart.test.tsx` (120/50 ms) and
+  `nft-detail.test.tsx` (100/150 ms); the MSW `latency` scenario (150 ms on all
+  REST handlers) exists in the mock layer but is not selected by any automated
+  test.
+- Network failure: optimistic quantity update rolled back with accessible
+  error (`cart.test.tsx`).
+- HTTP 4xx/5xx: availability conflict 409 (cart/nft-detail), session 401 and
+  `session-expired` (auth.spec.ts), coupon/order conflicts and 403 per-user
+  order isolation (`domain.test.ts`, `order-page.test.tsx`), order timeout 504
+  (`order-recovery.spec.ts`).
+- Retry/recovery: catalog error retry, idempotency-key retry after a 504
+  (`checkout.test.tsx`, `order-recovery.spec.ts`).
+- Skeletons with shimmer: loading states asserted in `cart.test.tsx` and
+  `nft-detail.test.tsx`.
 
 ---
 

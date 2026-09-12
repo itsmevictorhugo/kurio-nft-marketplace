@@ -1,3 +1,5 @@
+import { cartApi } from '@/lib/api/resources';
+
 const GUEST_ID_KEY = 'kurio-guest-id';
 
 /**
@@ -24,10 +26,7 @@ export function getGuestId(): string {
  */
 export async function clearGuestCart(guestId: string): Promise<void> {
   try {
-    await fetch('/api/cart', {
-      method: 'DELETE',
-      headers: { 'X-Guest-Id': guestId },
-    });
+    await cartApi.clear({ guestId });
   } catch {
     // Best effort; ignore network errors
   }

@@ -1097,8 +1097,8 @@ Current known limitations:
   the session-expiry flow (a fresh authenticated request rejected with 401)
   followed by a fresh isolated connection; it does not assert an observable
   intermediate zero-connection window after a simulated server disconnect.
-- Login UI exists and is used by the checkout guard (ADR-014), but the
-  remaining authentication surface (registration UI, password recovery) and the
-  profile/wallets management pages are separate later milestones and remain not
-  implemented. Guest→user cart merge is exercised through the API and the mock
-  login handler.
+- Registration, profile and wallet management pages are implemented and shipped
+  (see ADR-021/Authentication milestone and the Profile/Wallets milestone in
+  `DEFINITION-OF-DONE.md`); password recovery remains out of scope. Guest→user
+  cart merge is exercised through the API, the mock login handler and
+  `tests/e2e/cart.spec.ts`.
