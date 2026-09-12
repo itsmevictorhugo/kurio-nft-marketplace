@@ -894,7 +894,12 @@ logout/session changes tear down the old socket and route private events to the
 right session only (RT-11). The 3 s order polling (ADR-018) remains as a
 fallback for scenarios without an active socket. The mock scenario state is now
 persisted in `sessionStorage` (consistent with ADR-012) so scenario-driven
-flows survive full page reloads.
+flows survive full page reloads. The MSW socket link is scheme-aware
+(`ws://${host}/*` on HTTP, `wss://${host}/*` on HTTPS): the public Vercel
+deployment exposed that `socket.io-client` on HTTPS connects through `wss://`,
+and without the matching scheme the WebSocket was not intercepted, reached the
+real host, and failed the handshake (the SPA rewrite answered with the HTML
+document).
 
 ### ADR-021 — Authentication milestone: session policy, registration, logout, and centralized expiration
 

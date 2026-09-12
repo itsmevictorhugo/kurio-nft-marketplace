@@ -1,9 +1,12 @@
 node_modules/
 dist/
 playwright-report/
+playwright-smoke-report/
 test-results/
 coverage/
 .env
 .env.*
 !.env.example
 
+
+.vercel

@@ -29,9 +29,14 @@ function resolveSocketEndpoint(): string {
     typeof window !== 'undefined' && window.location?.host
       ? window.location.host
       : '127.0.0.1:4173';
+  const scheme =
+    typeof window !== 'undefined' && window.location?.protocol === 'https:' ? 'wss' : 'ws';
   // Trailing `/*` is required: the service worker strips `/socket.io/` from the
   // client URL but keeps the trailing slash, which would otherwise not match.
-  return `ws://${host}/*`;
+  // The scheme must follow the page protocol: on HTTPS deployments the
+  // `socket.io-client` connects through `wss://`, and MSW only intercepts it
+  // when the registered link uses the same scheme.
+  return `${scheme}://${host}/*`;
 }
 
 export const realtimeSocketLink = ws.link(resolveSocketEndpoint());

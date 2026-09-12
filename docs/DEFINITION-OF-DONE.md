@@ -171,15 +171,15 @@ Before submission:
 - [ ] Fixtures committed.
 - [ ] Tests committed.
 - [ ] Audit configuration committed.
-- [ ] Public deployment works.
-- [ ] Direct route access works.
-- [ ] Refresh works.
-- [ ] README contains setup.
-- [ ] README contains fictional credentials.
-- [ ] README documents scenarios.
-- [ ] README documents scenario reset.
-- [ ] README documents required commands.
-- [ ] README documents failure reproduction.
+- [x] Public deployment works.
+- [x] Direct route access works.
+- [x] Refresh works.
+- [x] README contains setup.
+- [x] README contains fictional credentials.
+- [x] README documents scenarios.
+- [x] README documents scenario reset.
+- [x] README documents required commands.
+- [x] README documents failure reproduction.
 
 ---
 

@@ -288,6 +288,50 @@ A entrega deve executar a partir de um checkout limpo, sem depender de serviços
 | `npm run lint` | Lint com ESLint |
 | `npm run test` | Testes unitários/integração com Vitest |
 | `npm run test:e2e` | Testes E2E e regressão visual com Playwright |
+| `npm run test:smoke` | Smoke test do deploy (aponta para `SMOKE_BASE_URL`; padrão: `https://kurio-nft-marketplace.vercel.app`) |
 | `npm run audit:lighthouse` | Auditoria Lighthouse (build + 12 medições, medianas em `reports/lighthouse/summary.json`) |
 
 A auditoria Lighthouse parte do checkout limpo com `npm install`; não depende de serviços externos e usa o cenário padrão dos mocks sobre o preview em `http://127.0.0.1:4199`.
+
+## 14. Deploy público
+
+**URL pública:** https://kurio-nft-marketplace.vercel.app
+
+**Provider:** Vercel. O projeto é um site estático Vite (framework detectado automaticamente) com build `npm run build` e output `dist`. A configuração de roteamento SPA fica em `vercel.json` (rewrite de rotas não encontradas para `/index.html`), garantindo acesso direto e refresh em `/`, `/nfts/:id`, `/cart`, `/checkout`, `/order/:id`, `/login`, `/register`, `/profile` e `/wallets` sem 404. `.vercelignore` exclui artefatos locais (`node_modules`, `dist`, `reports`, `test-results`) de envio.
+
+**MSW em produção:** o worker MSW é ativado no build de demonstração por padrão (`VITE_ENABLE_MSW` — qualquer valor diferente de `false`), então REST, Socket.IO (realtime via `wss://` no HTTPS) e os endpoints de controle de mocks funcionam na URL pública. Use `VITE_ENABLE_MSW=false` para desativar.
+
+**Credenciais fictícias:**
+
+| Email | Senha |
+| --- | --- |
+| `ada@kurio.test` | `kurio-ada-2026` |
+| `lin@kurio.test` | `kurio-lin-2026` |
+
+**Seleção e reset de cenários:** os endpoints de controle são interceptados pelo MSW no navegador (não chegam à rede). Para selecionar um cenário, envie, a partir da página da aplicação (ex.: console do DevTools ou um teste):
+
+```js
+await fetch('/api/__mock/scenario', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ scenario: 'price-changed' }),
+});
+```
+
+O valor de `scenario` vem de: `default`, `empty-catalog`, `latency`, `network-error`, `client-error`, `server-error`, `session-expired`, `sold-out`, `price-changed`, `coupon-accepted`, `coupon-rejected`, `order-pending`, `payment-confirmed`, `payment-rejected`, `order-timeout`. O reset restaura o seed e o cenário padrão:
+
+```js
+await fetch('/api/__mock/reset', { method: 'POST' });
+```
+
+O banco de mocks é persistido em `sessionStorage`, então um refresh preserva carrinho, sessão e cenário ativo na aba; outra aba começa do seed (limitação documentada em `ARCHITECTURE.md`).
+
+**Smoke test do deploy:** validação separada (independente da suíte local) contra a URL pública:
+
+```bash
+npm run test:smoke            # usa SMOKE_BASE_URL se definida; padrão: a URL pública
+# PowerShell:
+$env:SMOKE_BASE_URL='https://kurio-nft-marketplace.vercel.app'; npm run test:smoke
+```
+
+Cobre home, detalhe por URL direta + refresh, login, carrinho, pagamento, perfil e carteiras autenticados, realtime/controle de mocks, assets/fontes, ausência de erros no console/rede e o comportamento MSW do build.

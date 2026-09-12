@@ -216,7 +216,10 @@ ADR-020):
 - Connection: one application-wide Socket.IO client (`socket.io-client`,
   `transports: ['websocket']`, path `/socket.io`) lazy-dynamic-imported so
   `engine.io-client` never captures the browser `WebSocket` global before MSW
-  has patched it. The mock intercepts it on the MSW `ws://*` handler.
+  has patched it. The mock intercepts it on the MSW `ws(s)://*` handler: the
+  link scheme follows the page protocol (`ws://` on HTTP, `wss://` on HTTPS
+  deployments), otherwise `socket.io-client` reaches the real network and the
+  handshake fails.
 - Handshake: on connect the client emits `session:hello` with the bearer token;
   the mock routes `order.updated` only to the connection announcing that
   session, so private events are session-isolated.
