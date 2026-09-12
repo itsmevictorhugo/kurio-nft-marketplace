@@ -1,0 +1,583 @@
+{
+  "tool": {
+    "name": "Lighthouse",
+    "version": "13.4.1"
+  },
+  "environment": {
+    "node": "v24.13.1",
+    "platform": "win32",
+    "chromePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "baseUrl": "http://127.0.0.1:4199",
+    "previewPort": 4199,
+    "mockScenario": "default seed (no scenario selected)",
+    "runsPerScenario": 3
+  },
+  "thresholds": {
+    "performance": 90,
+    "accessibility": 95,
+    "best-practices": 95,
+    "seo": 90
+  },
+  "scenarios": [
+    {
+      "scenario": "home",
+      "label": "Home",
+      "url": "http://127.0.0.1:4199/",
+      "profile": "mobile",
+      "medians": {
+        "scores": {
+          "performance": 91,
+          "accessibility": 100,
+          "best-practices": 96,
+          "seo": 92
+        },
+        "metrics": {
+          "lcp": 3156.1114500000003,
+          "cls": 0.0004224031245116186,
+          "tbt": 64
+        },
+        "pass": {
+          "performance": true,
+          "accessibility": true,
+          "best-practices": true,
+          "seo": true
+        },
+        "overallPass": true,
+        "sampleConfig": {
+          "formFactor": "mobile",
+          "throttlingMethod": "simulate",
+          "screenEmulation": {
+            "mobile": true,
+            "width": 412,
+            "height": 823,
+            "deviceScaleFactor": 1.75,
+            "disabled": false
+          }
+        },
+        "sampleEnvironment": {
+          "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+          "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+          "benchmarkIndex": 4022
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "fetchTime": "2026-09-12T08:04:09.547Z",
+          "scores": {
+            "performance": 91,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 3156.1114500000003,
+            "cls": 0.0004224031245116186,
+            "tbt": 64
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "mobile",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": true,
+              "width": 412,
+              "height": 823,
+              "deviceScaleFactor": 1.75,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+            "benchmarkIndex": 4022
+          }
+        },
+        {
+          "run": 2,
+          "fetchTime": "2026-09-12T08:04:17.246Z",
+          "scores": {
+            "performance": 90,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 3157.1742,
+            "cls": 0.0004224031245116186,
+            "tbt": 70
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "mobile",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": true,
+              "width": 412,
+              "height": 823,
+              "deviceScaleFactor": 1.75,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+            "benchmarkIndex": 3826
+          }
+        },
+        {
+          "run": 3,
+          "fetchTime": "2026-09-12T08:04:24.679Z",
+          "scores": {
+            "performance": 91,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 3143.4060000000004,
+            "cls": 0.0004224031245116186,
+            "tbt": 64
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "mobile",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": true,
+              "width": 412,
+              "height": 823,
+              "deviceScaleFactor": 1.75,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+            "benchmarkIndex": 4068
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "nft-detail",
+      "label": "NFT Detail",
+      "url": "http://127.0.0.1:4199/nfts/nft-aurora",
+      "profile": "mobile",
+      "medians": {
+        "scores": {
+          "performance": 90,
+          "accessibility": 100,
+          "best-practices": 96,
+          "seo": 92
+        },
+        "metrics": {
+          "lcp": 3229.1718,
+          "cls": 0,
+          "tbt": 22
+        },
+        "pass": {
+          "performance": true,
+          "accessibility": true,
+          "best-practices": true,
+          "seo": true
+        },
+        "overallPass": true,
+        "sampleConfig": {
+          "formFactor": "mobile",
+          "throttlingMethod": "simulate",
+          "screenEmulation": {
+            "mobile": true,
+            "width": 412,
+            "height": 823,
+            "deviceScaleFactor": 1.75,
+            "disabled": false
+          }
+        },
+        "sampleEnvironment": {
+          "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+          "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+          "benchmarkIndex": 4096
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "fetchTime": "2026-09-12T08:04:32.199Z",
+          "scores": {
+            "performance": 90,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 3180.237,
+            "cls": 0,
+            "tbt": 20
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "mobile",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": true,
+              "width": 412,
+              "height": 823,
+              "deviceScaleFactor": 1.75,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+            "benchmarkIndex": 4096
+          }
+        },
+        {
+          "run": 2,
+          "fetchTime": "2026-09-12T08:04:39.405Z",
+          "scores": {
+            "performance": 89,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 3229.1718,
+            "cls": 0,
+            "tbt": 23
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "mobile",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": true,
+              "width": 412,
+              "height": 823,
+              "deviceScaleFactor": 1.75,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+            "benchmarkIndex": 4082.5
+          }
+        },
+        {
+          "run": 3,
+          "fetchTime": "2026-09-12T08:04:46.530Z",
+          "scores": {
+            "performance": 90,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 3275.7154,
+            "cls": 0,
+            "tbt": 22
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "mobile",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": true,
+              "width": 412,
+              "height": 823,
+              "deviceScaleFactor": 1.75,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+            "benchmarkIndex": 4071.5
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "home",
+      "label": "Home",
+      "url": "http://127.0.0.1:4199/",
+      "profile": "desktop",
+      "medians": {
+        "scores": {
+          "performance": 99,
+          "accessibility": 96,
+          "best-practices": 96,
+          "seo": 92
+        },
+        "metrics": {
+          "lcp": 801.8829000000001,
+          "cls": 0.0003315855777934765,
+          "tbt": 0
+        },
+        "pass": {
+          "performance": true,
+          "accessibility": true,
+          "best-practices": true,
+          "seo": true
+        },
+        "overallPass": true,
+        "sampleConfig": {
+          "formFactor": "desktop",
+          "throttlingMethod": "simulate",
+          "screenEmulation": {
+            "mobile": false,
+            "width": 1350,
+            "height": 940,
+            "deviceScaleFactor": 1,
+            "disabled": false
+          }
+        },
+        "sampleEnvironment": {
+          "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+          "networkUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+          "benchmarkIndex": 4030.5
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "fetchTime": "2026-09-12T08:04:53.823Z",
+          "scores": {
+            "performance": 99,
+            "accessibility": 96,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 801.8829000000001,
+            "cls": 0.0003315855777934765,
+            "tbt": 0
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "desktop",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": false,
+              "width": 1350,
+              "height": 940,
+              "deviceScaleFactor": 1,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+            "benchmarkIndex": 4030.5
+          }
+        },
+        {
+          "run": 2,
+          "fetchTime": "2026-09-12T08:05:01.329Z",
+          "scores": {
+            "performance": 99,
+            "accessibility": 96,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 799.20565,
+            "cls": 0.0003315855777934765,
+            "tbt": 0
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "desktop",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": false,
+              "width": 1350,
+              "height": 940,
+              "deviceScaleFactor": 1,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+            "benchmarkIndex": 4124.5
+          }
+        },
+        {
+          "run": 3,
+          "fetchTime": "2026-09-12T08:05:09.067Z",
+          "scores": {
+            "performance": 99,
+            "accessibility": 96,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 802.9558,
+            "cls": 0.0003315855777934765,
+            "tbt": 0
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "desktop",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": false,
+              "width": 1350,
+              "height": 940,
+              "deviceScaleFactor": 1,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+            "benchmarkIndex": 4068
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "nft-detail",
+      "label": "NFT Detail",
+      "url": "http://127.0.0.1:4199/nfts/nft-aurora",
+      "profile": "desktop",
+      "medians": {
+        "scores": {
+          "performance": 95,
+          "accessibility": 100,
+          "best-practices": 96,
+          "seo": 92
+        },
+        "metrics": {
+          "lcp": 705.1456,
+          "cls": 0.127390877759184,
+          "tbt": 0
+        },
+        "pass": {
+          "performance": true,
+          "accessibility": true,
+          "best-practices": true,
+          "seo": true
+        },
+        "overallPass": true,
+        "sampleConfig": {
+          "formFactor": "desktop",
+          "throttlingMethod": "simulate",
+          "screenEmulation": {
+            "mobile": false,
+            "width": 1350,
+            "height": 940,
+            "deviceScaleFactor": 1,
+            "disabled": false
+          }
+        },
+        "sampleEnvironment": {
+          "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+          "networkUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+          "benchmarkIndex": 3998.5
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "fetchTime": "2026-09-12T08:05:16.620Z",
+          "scores": {
+            "performance": 95,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 705.1456,
+            "cls": 0.127390877759184,
+            "tbt": 0
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "desktop",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": false,
+              "width": 1350,
+              "height": 940,
+              "deviceScaleFactor": 1,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+            "benchmarkIndex": 3998.5
+          }
+        },
+        {
+          "run": 2,
+          "fetchTime": "2026-09-12T08:05:23.887Z",
+          "scores": {
+            "performance": 95,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 720.2235999999999,
+            "cls": 0.127390877759184,
+            "tbt": 0
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "desktop",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": false,
+              "width": 1350,
+              "height": 940,
+              "deviceScaleFactor": 1,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+            "benchmarkIndex": 4107
+          }
+        },
+        {
+          "run": 3,
+          "fetchTime": "2026-09-12T08:05:31.003Z",
+          "scores": {
+            "performance": 95,
+            "accessibility": 100,
+            "best-practices": 96,
+            "seo": 92
+          },
+          "metrics": {
+            "lcp": 696.7674000000001,
+            "cls": 0.127390877759184,
+            "tbt": 0
+          },
+          "lcpElement": null,
+          "config": {
+            "formFactor": "desktop",
+            "throttlingMethod": "simulate",
+            "screenEmulation": {
+              "mobile": false,
+              "width": 1350,
+              "height": 940,
+              "deviceScaleFactor": 1,
+              "disabled": false
+            }
+          },
+          "environment": {
+            "hostUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "networkUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+            "benchmarkIndex": 4096.5
+          }
+        }
+      ]
+    }
+  ]
+}

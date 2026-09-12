@@ -24,9 +24,9 @@ export function CatalogGrid({ items, isLoading, isUpdating, skeletonCount = 6, c
               <NftCardSkeleton />
             </li>
           ))
-        : items.map((nft) => (
+        : items.map((nft, index) => (
             <li key={nft.id}>
-              <NftCard nft={nft} />
+              <NftCard nft={nft} priority={index < 3} />
             </li>
           ))}
     </ul>

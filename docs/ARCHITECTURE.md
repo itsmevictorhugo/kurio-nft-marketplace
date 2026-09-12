@@ -948,6 +948,51 @@ Impact:
   `auth.spec.ts` (9 scenarios × desktop + mobile) cover AUTH-01..08.
 - RT-11 session isolation still passes; realtime session-change bus unchanged.
 
+### ADR-022 — Production build optimizations for Lighthouse mobile targets
+
+Context:
+The Lighthouse audit (defined in `scripts/lighthouse/audit.mjs`, v13.4.1)
+required by README §10 requires Home and NFT Detail at ≥ 90 Performance. The
+first mobile measurements scored 88/89. Lighthouse attributed the gap to
+render-blocking CSS (~150 ms) and the LCP image being loaded with
+`loading="lazy"` and without prioritization, both behind the single JS bundle.
+
+Decision:
+- The build step inlines the render-blocking stylesheet into the built
+  `index.html` via `scripts/inline-css.mjs` (`npm run build` runs
+  `vite build && node scripts/inline-css.mjs`).
+- LCP candidates receive explicit prioritization without changing layout or
+  behavior: the Home hero and NFT Detail gallery main image use
+  `fetchPriority="high"`, and the first catalog grid row (the mobile LCP)
+  renders with `loading="eager"` + `fetchPriority="high"` (a new `priority`
+  prop on `NftCard`, applied for `index < 3`). Remaining grid images stay
+  lazy.
+
+Reason:
+Inline CSS removes one round-trip/fetch for the critical stylesheet, and
+prioritized eager LCP images start downloading without waiting for layout to
+discover them — both directly address the Lighthouse findings. No feature,
+asset, or visual behavior changes; the audit still loads the real artwork
+PNGs, Roboto Mono woff2 fonts, and working flows.
+
+Alternatives considered:
+- Code splitting the vendor bundle: the app is a single route-driven bundle;
+  splitting would be speculative optimization beyond the measured cause.
+- A Vite plugin performing the inlining at transform time: ordering between
+  emitted HTML and CSS is fragile; a post-build script is deterministic.
+- Inlining eagerly-priority images globally: unnecessary for non-LCP images.
+
+Impact:
+- `package.json` `build` now also inlines CSS. The built `index.html` carries
+  a `<style>` block; the deferred CSS file no longer ships for the app
+  stylesheet.
+- `NftCard` gains an optional `priority` prop (default lazy, unchanged for
+  other usages); `catalog-grid.tsx` passes `priority={index < 3}`.
+- After this change, mobile medians reached 91 (Home) and 90 (NFT Detail),
+  with desktop at 99 and 95, meeting all README thresholds. Results are
+  recorded in `README.md` §10, `docs/TEST-MATRIX.md` §15, and
+  `reports/lighthouse/`.
+
 ---
 
 # 18. Figma Deviations

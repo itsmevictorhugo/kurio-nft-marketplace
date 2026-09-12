@@ -40,6 +40,7 @@ export function NftGallery({ imageUrl, nftName }: NftGalleryProps) {
           <img
             src={imageUrl}
             alt={`Arte do NFT ${nftName}`}
+            fetchPriority="high"
             className="aspect-square w-full rounded-lg object-cover"
           />
         </div>

@@ -127,14 +127,14 @@ Check:
 
 Where applicable:
 
-- [ ] Lighthouse configuration exists.
-- [ ] Build is optimized.
-- [ ] Images use the real delivery assets.
-- [ ] Fonts are included as required.
-- [ ] No functionality was removed solely for Lighthouse.
-- [ ] LCP recorded.
-- [ ] CLS recorded.
-- [ ] TBT recorded.
+- [x] Lighthouse configuration exists.
+- [x] Build is optimized.
+- [x] Images use the real delivery assets.
+- [x] Fonts are included as required.
+- [x] No functionality was removed solely for Lighthouse.
+- [x] LCP recorded.
+- [x] CLS recorded.
+- [x] TBT recorded.
 
 ---
 
@@ -200,8 +200,28 @@ evidence is recorded.
 | Profile/Wallets      | PENDING   | read-side hooks used by checkout; management UI pending |
 | Realtime             | DONE      | `src/features/realtime/*` (version guard + `RealtimeSync`), `src/mocks/socket/*` hub over the MSW `ws` transport, `realtime.spec.ts` (desktop + mobile, RT-01..11), `version-guard.test.ts` (8) |
 | Accessibility suite  | PENDING   | `accessibility.spec` not yet written; per-component a11y verified in Vitest/E2E |
-| Visual regression    | PENDING   | baselines for Home/NFT Detail/Cart not yet committed |
-| Lighthouse           | PENDING   | audit config and report pending |
+| Visual regression    | DONE      | 4 cases (Home, NFT Detail, Cart, Payment) × viewports 390/768/1440 = 12 real `toHaveScreenshot()` comparisons via Playwright; versioned baselines under `tests/e2e/visual.spec.ts-snapshots/` |
+| Lighthouse           | DONE      | Lighthouse 13.4.1 audit of Home + NFT Detail on mobile + desktop, 3 runs per scenario (12 total), medians ≥ targets (P≥90, A≥95, BP≥95, SEO≥90); HTML/JSON reports + `summary.json` under `reports/lighthouse/`; versioned script `scripts/lighthouse/audit.mjs` |
+
+Lighthouse milestone definition of done — verified:
+
+- Audit: Home and NFT Detail × mobile/desktop profiles = 4 scenarios, 3
+  independent runs each (12 measurements), median scores reported per
+  scenario and compared against the README thresholds.
+- Reports: per-run HTML and JSON under `reports/lighthouse/
+  <scenario>-<profile>-run<N>.{html,json}` plus an aggregated
+  `summary.json` with tool version, environment, and per-scenario medians.
+- Metrics: LCP, CLS and TBT recorded per run and as medians.
+- Thresholds met on the production build (`vite build` + inlined CSS) using
+  the default mock scenario: mobile P=91/90, desktop P=99/95; A/BP/SEO ≥
+  target everywhere.
+- Real assets: actual artwork PNGs, Roboto Mono woff2 and app functionality
+  load during the audit; no fake audit-only mode.
+- Build optimization: the render-blocking stylesheet is inlined into the
+  built `index.html` by `scripts/inline-css.mjs` as part of `npm run
+  build` (a real production optimization, not an audit-only shim); the LCP
+  hero/catalog/gallery images carry `fetchPriority="high"` and the first
+  catalog row loads eagerly.
 
 Cart milestone definition of done — verified:
 
@@ -326,3 +346,20 @@ Authentication milestone definition of done — verified:
   redirect, AUTH-05 session persistence, AUTH-06 expiration (401 → toast +
   redirect), AUTH-07 logout + cache cleanup, AUTH-08 user switching isolation.
   Every E2E starts from isolated mock state via `POST /api/__mock/reset`.
+
+Visual regression milestone definition of done — verified:
+
+- Functional: Home, NFT Detail, Cart and Payment each have a screenshot
+  comparison; every case iterates the viewports explicitly — 390x844,
+  768x1024, 1440x900 — so a normal desktop run performs 12 real
+  `toHaveScreenshot()` comparisons.
+- Baselines: versioned PNG baselines exist for all 12 comparisons under
+  `tests/e2e/visual.spec.ts-snapshots/`; baselines are updated only
+  intentionally (Playwright update mode).
+- Data: stable and deterministic — every case starts from isolated mock
+  state via `POST /api/__mock/reset`, and the cart/payment cases render the
+  seeded Ada cart.
+- Execution: Playwright; the 4 cases run once on the desktop project. The
+  mobile project skips them because the viewports are set explicitly by the
+  spec, so re-running would duplicate the same three widths (mobile layout
+  continuity is covered by the functional suite on both projects).

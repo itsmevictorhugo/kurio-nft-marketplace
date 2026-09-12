@@ -5,7 +5,7 @@ import { enableMocking } from '@/mocks/browser';
 import '@/styles/globals.css';
 
 async function bootstrap() {
-  if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW !== 'false') {
+  if (import.meta.env.VITE_ENABLE_MSW !== 'false') {
     await enableMocking();
   }
 

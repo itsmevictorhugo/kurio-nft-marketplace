@@ -5,9 +5,10 @@ import type { Nft } from '@/types/domain';
 interface NftCardProps {
   nft: Nft;
   className?: string;
+  priority?: boolean;
 }
 
-export function NftCard({ nft, className }: NftCardProps) {
+export function NftCard({ nft, className, priority = false }: NftCardProps) {
   return (
     <article className={cn('group', className)}>
       <Link
@@ -19,7 +20,8 @@ export function NftCard({ nft, className }: NftCardProps) {
           <img
             src={nft.imageUrl}
             alt=""
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : undefined}
             className="aspect-square w-full rounded-md object-cover"
           />
         </div>

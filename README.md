@@ -228,6 +228,21 @@ Execute três medições por página e perfil e reporte a mediana de cada catego
 
 Registre LCP, CLS e TBT. Justifique resultados abaixo das metas e identifique as causas. A auditoria deve carregar as imagens, fontes e funcionalidades da entrega, sem simplificações exclusivas para melhorar a pontuação.
 
+### Resultados da auditoria
+
+Configuração versionada em `scripts/lighthouse/audit.mjs` (Lighthouse 13.4.1, Chrome, Node v24.13.1, Windows), executada com `npm run audit:lighthouse`, que constrói o build otimizado e roda três medições por página/perfil sobre o preview com o cenário padrão dos mocks. Relatórios HTML/JSON por execução e `reports/lighthouse/summary.json` agregam versões, ambiente, condições de execução e as medianas. Medianas por categoria:
+
+| Página | Perfil | Performance | Accessibility | Best Practices | SEO |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Início | mobile | 91 | 100 | 96 | 92 |
+| Detalhe do NFT | mobile | 90 | 100 | 96 | 92 |
+| Início | desktop | 99 | 96 | 96 | 92 |
+| Detalhe do NFT | desktop | 95 | 100 | 96 | 92 |
+
+Métricas mediana (LCP/CLS/TBT): início mobile 3156 ms / 0,0004 / 64 ms; detalhe mobile 3229 ms / 0 / 22 ms; início desktop 802 ms / 0,0003 / 0 ms; detalhe desktop 705 ms / 0,1274 / 0 ms.
+
+A primeira medição em mobile ficou abaixo da meta de Performance (88/89), com CSS que bloqueava a renderização (~150 ms apontados pelo Lighthouse) e imagem LCP com `loading="lazy"` e sem priorização por trás do bundle JS. O build agora embute a folha de estilos no `index.html` (`scripts/inline-css.mjs`) e as imagens LCP levam `fetchPriority="high"` (primeira linha do catálogo carrega eagerly), elevando as medianas mobile para os valores acima. Nenhuma funcionalidade foi removida e a auditoria usa os assets reais. O CLS de 0,1274 no detalhe desktop vem do reflow da fonte Roboto Mono e é registrado, sem comprometer as metas.
+
 ## 11. Critérios de avaliação
 
 | Critério | Pontos | Evidência esperada |
@@ -260,3 +275,19 @@ Documente os contratos REST e eventos, a política de sessão, o estado do carri
 Disponibilize comandos para desenvolvimento com mocks, build, preview, verificação de tipos, lint, testes Playwright e auditoria Lighthouse.
 
 A entrega deve executar a partir de um checkout limpo, sem depender de serviços privados ou do backend de produção.
+
+## 13. Comandos
+
+| Comando | Descrição |
+| --- | --- |
+| `npm install` | Instala dependências |
+| `npm run dev` | Desenvolvimento com mocks MSW habilitados |
+| `npm run build` | Build otimizado (embute o CSS no `index.html` via `scripts/inline-css.mjs`) |
+| `npm run preview` | Preview do build em produção |
+| `npm run typecheck` | Verificação de tipos com TypeScript |
+| `npm run lint` | Lint com ESLint |
+| `npm run test` | Testes unitários/integração com Vitest |
+| `npm run test:e2e` | Testes E2E e regressão visual com Playwright |
+| `npm run audit:lighthouse` | Auditoria Lighthouse (build + 12 medições, medianas em `reports/lighthouse/summary.json`) |
+
+A auditoria Lighthouse parte do checkout limpo com `npm install`; não depende de serviços externos e usa o cenário padrão dos mocks sobre o preview em `http://127.0.0.1:4199`.

@@ -299,21 +299,36 @@ Vitest evidence:
 
 ## 14. Visual Regression
 
-Required baselines:
+| ID      | Requirement                | Test         |
+| ------- | -------------------------- | ------------ |
+| VIS-01  | Home baseline at 390px     | visual.spec  |
+| VIS-02  | Home baseline at 768px     | visual.spec  |
+| VIS-03  | Home baseline at 1440px    | visual.spec  |
+| VIS-04  | NFT Detail at 390px        | visual.spec  |
+| VIS-05  | NFT Detail at 768px        | visual.spec  |
+| VIS-06  | NFT Detail at 1440px       | visual.spec  |
+| VIS-07  | Cart at 390px              | visual.spec  |
+| VIS-08  | Cart at 768px              | visual.spec  |
+| VIS-09  | Cart at 1440px             | visual.spec  |
+| VIS-10  | Payment at 390px           | visual.spec  |
+| VIS-11  | Payment at 768px           | visual.spec  |
+| VIS-12  | Payment at 1440px          | visual.spec  |
 
-```text
-Home
-NFT Detail
-Cart
-Payment
-```
+Implemented visual regression evidence:
 
-Required contexts:
-
-```text
-Desktop
-Mobile
-```
+- `tests/e2e/visual.spec.ts` executes 4 cases — Home, NFT Detail, Cart and
+  Payment. Each case iterates the viewports explicitly (390x844, 768x1024,
+  1440x900), so a normal run performs 12 real Playwright
+  `toHaveScreenshot()` comparisons (baseline vs. fresh capture).
+- Versioned baselines exist for all 12 comparisons under
+  `tests/e2e/visual.spec.ts-snapshots/`.
+- Every case starts from deterministic mock state via
+  `POST /api/__mock/reset`; the cart and payment cases render the seeded Ada
+  cart.
+- The 4 cases run once, on the desktop project; the mobile project skips
+  them because the viewports are set explicitly by the spec (re-running
+  would duplicate the same three widths). Mobile layout continuity is still
+  exercised by the functional suite on both projects.
 
 ---
 
@@ -351,6 +366,33 @@ Record:
 - LCP;
 - CLS;
 - TBT.
+
+Implemented Lighthouse evidence:
+
+- `scripts/lighthouse/audit.mjs` runs Home and NFT Detail on mobile and
+  desktop profiles (4 scenarios × 3 runs), computes category medians
+  and compares them to the README thresholds, and exits non-zero when a
+  scenario fails.
+- Run via `npm run audit:lighthouse` (builds first). Reports per run
+  (HTML/JSON) and aggregated `summary.json` are delivered under
+  `reports/lighthouse/`.
+- Medians (Lighthouse 13.4.1, production build, default seed):
+
+  | Scenario            | P    | A   | BP  | SEO | LCP (ms) | CLS    | TBT (ms) | Result |
+  | ------------------- | ---: | --: | --: | --: | -------: | -----: | -------: | ------ |
+  | Home mobile         | 91   | 100 | 96  | 92  | 3156     | 0.0004 | 64       | PASS   |
+  | NFT Detail mobile   | 90   | 100 | 96  | 92  | 3229     | 0.0000 | 22       | PASS   |
+  | Home desktop        | 99   | 96  | 96  | 92  | 802      | 0.0003 | 0        | PASS   |
+  | NFT Detail desktop  | 95   | 100 | 96  | 92  | 705      | 0.1274 | 0        | PASS   |
+
+- Initial mobile runs scored P=88/89 (below the ≥90 target); the cause was
+  render-blocking CSS (~150 ms flagged by Lighthouse) plus the LCP image
+  being lazy/non-prioritized behind the large JS bundle. The production
+  build now inlines the stylesheet (`scripts/inline-css.mjs`) and marks the
+  LCP hero/catalog/gallery images `fetchPriority="high"` (first catalog row
+  eager), which lifted both mobile medians to 91/90. No functionality or
+  visual fidelity changed; the audit still loads the real artwork, fonts and
+  features.
 
 ---
 
