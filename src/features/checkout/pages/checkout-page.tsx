@@ -9,6 +9,7 @@ import { useCart, useCartItemDetails, describeCartItem } from '@/features/cart/h
 import { useQuote } from '@/features/cart/hooks/use-quote';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 import { useWallets } from '@/features/wallets/hooks/use-wallets';
+import { getRequestIdentity } from '@/features/cart/identity';
 import { CollectorData } from '@/features/checkout/components/collector-data';
 import { WalletForm, type ConnectState } from '@/features/checkout/components/wallet-form';
 import { CheckoutReview } from '@/features/checkout/components/checkout-review';
@@ -35,11 +36,12 @@ const derivedValuesMessage = 'Os valores foram atualizados. Revise e confirme no
 
 export function CheckoutPage() {
   const token = useMemo(getSessionToken, []);
+  const identity = getRequestIdentity();
   const navigate = useNavigate();
 
   const sessionQuery = useSession();
   const profileQuery = useProfile(token);
-  const walletsQuery = useWallets(token);
+  const walletsQuery = useWallets(identity);
   const cartQuery = useCart();
   const items = cartQuery.data?.items ?? [];
   const nftsById = useCartItemDetails(items.length ? items : undefined);

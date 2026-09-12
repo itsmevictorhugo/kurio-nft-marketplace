@@ -10,6 +10,8 @@ import { NftDetailPage } from '@/features/nft/pages/nft-detail-page';
 import { CartPage } from '@/features/cart/pages/cart-page';
 import { CheckoutPage } from '@/features/checkout/pages/checkout-page';
 import { OrderDetailPage } from '@/features/orders/pages/order-detail-page';
+import { ProfilePage } from '@/features/profile/pages/profile-page';
+import { WalletsPage } from '@/features/wallets/pages/wallets-page';
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -99,13 +101,23 @@ const registerRoute = createRoute({
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile',
-  component: () => <RoutePlaceholder title="Profile" />, 
+  beforeLoad: () => {
+    if (!getSessionToken()) {
+      throw redirect({ to: '/login', search: { redirect: '/profile' } });
+    }
+  },
+  component: ProfilePage,
 });
 
 const walletsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/wallets',
-  component: () => <RoutePlaceholder title="Wallets" />, 
+  beforeLoad: () => {
+    if (!getSessionToken()) {
+      throw redirect({ to: '/login', search: { redirect: '/wallets' } });
+    }
+  },
+  component: WalletsPage,
 });
 
 export const routeTree = rootRoute.addChildren([

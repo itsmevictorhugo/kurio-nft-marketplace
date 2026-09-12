@@ -11,8 +11,8 @@ test('loads the application shell', async ({ page }) => {
     ['/order-confirmation', 'Seja dono do futuro da arte digital'],
     ['/login', 'Entrar na sua conta'],
     ['/register', 'Criar sua conta'],
-    ['/profile', 'Profile'],
-    ['/wallets', 'Wallets'],
+    ['/profile', 'Entrar na sua conta'],
+    ['/wallets', 'Entrar na sua conta'],
   ] as const;
 
   for (const [path, title] of routes) {

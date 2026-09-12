@@ -45,7 +45,10 @@ const PERSISTENCE_KEY = 'kurio-mock-db:v1';
  * clean, deterministic per-test databases.
  */
 function canUsePersistentStore() {
-  return typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+  return (
+    (typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined') ||
+    (typeof self !== 'undefined' && typeof self.sessionStorage !== 'undefined')
+  );
 }
 
 function mapEntries<V>(map: Map<string, V>) {
@@ -57,7 +60,8 @@ export function persistMockDatabase() {
     return;
   }
   try {
-    const { mockDatabase: database } = { mockDatabase: getMockDatabase() };
+    const storage = typeof window !== 'undefined' ? window.sessionStorage : self.sessionStorage;
+    const database = getMockDatabase();
     const snapshot = JSON.stringify({
       users: database.users,
       sessions: mapEntries(database.sessions),
@@ -73,7 +77,7 @@ export function persistMockDatabase() {
       timedOutOrderKeys: Array.from(database.timedOutOrderKeys),
       counters: database.counters,
     });
-    window.sessionStorage.setItem(PERSISTENCE_KEY, snapshot);
+    storage.setItem(PERSISTENCE_KEY, snapshot);
   } catch {
     // Persistence is best-effort; an unavailable store never breaks the mock.
   }

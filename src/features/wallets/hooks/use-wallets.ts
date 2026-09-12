@@ -1,15 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { walletsApi } from '@/lib/api/resources';
+import type { CartIdentity } from '@/features/cart/identity';
 
-export function walletsQueryKey(token: string) {
-  return ['wallets', token] as const;
+export function walletsQueryKey(identity: CartIdentity) {
+  return ['wallets', identity] as const;
 }
 
-export function useWallets(token: string | null) {
+function getTokenFromIdentity(identity: CartIdentity): string | undefined {
+  return identity.token;
+}
+
+export function useWallets(identity: CartIdentity | null) {
   return useQuery({
-    queryKey: ['wallets', token],
-    queryFn: () => walletsApi.list(token as string),
-    enabled: Boolean(token),
+    queryKey: ['wallets', identity],
+    queryFn: () => walletsApi.list(getTokenFromIdentity(identity as CartIdentity) as string),
+    enabled: Boolean(identity?.token),
     retry: false,
     select: (data) => data.items,
   });

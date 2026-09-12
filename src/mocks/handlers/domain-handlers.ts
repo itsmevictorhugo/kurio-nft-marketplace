@@ -559,7 +559,7 @@ export const domainHandlers = [
     const wallet: Wallet = { id: nextId('wallet'), label, address, network, isPrimary };
     wallets.push(wallet);
     getMockDatabase().walletsByUser.set(userId, wallets);
-    persistMockDatabase();
+    await persistMockDatabase();
     return HttpResponse.json<WalletResponse>({ wallet }, { status: 201 });
   }),
 
@@ -568,9 +568,10 @@ export const domainHandlers = [
     if (scenario) return scenario;
     const userId = requireUserId(request);
     if (!userId) return unauthorized();
-    const wallets = getMockDatabase().walletsByUser.get(userId) ?? [];
-    const wallet = wallets.find((item) => item.id === params.walletId);
-    if (!wallet) return apiError(404, 'not_found', 'Wallet was not found.');
+    let wallets = getMockDatabase().walletsByUser.get(userId) ?? [];
+    const foundWallet = wallets.find((item) => item.id === params.walletId);
+    if (!foundWallet) return apiError(404, 'not_found', 'Wallet was not found.');
+    let wallet = foundWallet;
     const body = asRecord(await request.json());
     if (body?.label !== undefined) {
       const label = asNonEmptyString(body.label);
@@ -579,9 +580,14 @@ export const domainHandlers = [
     }
     if (body?.network === 'ethereum' || body?.network === 'polygon') wallet.network = body.network;
     if (body?.isPrimary === true) {
-      wallets.forEach((item) => (item.isPrimary = item.id === wallet.id));
+      wallets = wallets.map((item) => ({
+        ...item,
+        isPrimary: item.id === wallet.id,
+      }));
+      wallet = wallets.find((item) => item.id === wallet.id)!;
     }
-    persistMockDatabase();
+    getMockDatabase().walletsByUser.set(userId, wallets);
+    await persistMockDatabase();
     return HttpResponse.json<WalletResponse>({ wallet });
   }),
 ];
