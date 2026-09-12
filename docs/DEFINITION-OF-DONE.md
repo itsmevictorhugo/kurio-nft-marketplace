@@ -194,7 +194,7 @@ evidence is recorded.
 | Foundation           | DONE      | `src/app/router`, layouts, dev MSW bootstrap |
 | Catalog + NFT Detail | DONE      | `catalog.spec`, `nft.spec` equivalents in Vitest (`catalog.test.tsx`, `nft-detail.test.tsx`) |
 | Cart                 | DONE      | `src/features/cart/*`, `cart.test.tsx`, `tests/e2e/cart.spec.ts` (desktop + mobile) |
-| Authentication       | PARTIAL   | login implemented for the checkout guard (`login.test.tsx`, `checkout.spec`); registration/profile management UI pending |
+| Authentication       | DONE      | `src/features/auth/*` (register page, session infrastructure, logout helper), `register.test.tsx` (6), `login.test.tsx` (7), `session.ts` (logout + bus), `api-client.ts` (401 interceptor), `site-header.tsx` + `mobile-bottom-nav.tsx` (authenticated state), `tests/e2e/auth.spec.ts` (desktop + mobile, AUTH-01..08) |
 | Favorites            | PENDING   | API-driven from detail; dedicated favorites UI pending |
 | Checkout/Orders      | DONE      | `src/features/checkout/*`, `src/features/orders/*`, `checkout.test.tsx`, `checkout-attempt.test.ts`, `order-page.test.tsx`, `tests/e2e/checkout.spec.ts`, `tests/e2e/order-recovery.spec.ts` (desktop + mobile) |
 | Profile/Wallets      | PENDING   | read-side hooks used by checkout; management UI pending |
@@ -296,3 +296,33 @@ Realtime milestone definition of done — verified:
   `version-guard.test.ts` (8) and the extended `mocks/domain.test.ts` version
   assertions pass; every E2E starts from isolated mock state and drives events
   through the real transport (no test calls app realtime handlers directly).
+
+Authentication milestone definition of done — verified:
+
+- Functional: registration page with client-side validation (email, displayName ≥ 2,
+  password ≥ 8) and server-side conflict handling (409); login page preserves
+  `?redirect=` for checkout/order/home; logout clears token, private caches, and
+  realtime socket via `try/finally`; session persists across refresh; 401 triggers
+  centralized Axios interceptor → toast + redirect to `/login?redirect=`;
+  user switching isolates private data (cart, favorites, orders).
+- API: `POST /auth/register`, `POST /auth/login`, `GET /auth/session`,
+  `POST /auth/logout` via Axios + TanStack Query; MSW handlers deterministic with
+  `session-expired` scenario for 401; mock `mergeGuestCartIntoUser` merges guest
+  cart on login respecting availability.
+- State: `setSessionToken`/`clearSessionToken`/`logout()` purge `['cart']`,
+  `['quote']`, `['order']`, `['session']`, `['profile']`, `['wallets']`; query
+  keys embed token/identity for isolation; `onSessionChange` bus tears down
+  realtime socket on token change.
+- Money: no auth-specific monetary logic.
+- Visual: header shows avatar dropdown (Profile/Sair) when authenticated, "Entrar"
+  when anonymous; mobile bottom nav mirrors with dropdown; forms follow Figma
+  spacing/typography; shadcn components adapted to Kurio theme.
+- Accessibility: form labels, `aria-live` errors, `role="alert"` toast, dropdown
+  `role="menu"` with keyboard navigation, focus-visible rings, focus trap on
+  dropdown open.
+- Testing: `register.test.tsx` (6), `login.test.tsx` (7),
+  `tests/e2e/auth.spec.ts` (9 scenarios × desktop + mobile = 18 runs): AUTH-01
+  registration success, AUTH-02 validation, AUTH-03 conflict, AUTH-04 login +
+  redirect, AUTH-05 session persistence, AUTH-06 expiration (401 → toast +
+  redirect), AUTH-07 logout + cache cleanup, AUTH-08 user switching isolation.
+  Every E2E starts from isolated mock state via `POST /api/__mock/reset`.

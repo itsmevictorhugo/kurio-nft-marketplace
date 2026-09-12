@@ -896,6 +896,58 @@ fallback for scenarios without an active socket. The mock scenario state is now
 persisted in `sessionStorage` (consistent with ADR-012) so scenario-driven
 flows survive full page reloads.
 
+### ADR-021 — Authentication milestone: session policy, registration, logout, and centralized expiration
+
+Context:
+The checkout/orders milestone introduced a minimal login bridge (ADR-014) to
+protect `/checkout` and `/order/$orderId`. The authentication milestone completes
+the full auth surface: registration, logout, session persistence, expiration
+handling, user switching, and redirect/context preservation. The session
+infrastructure (`features/auth/session.ts`, `onSessionChange` bus, `purgePrivateQueries`)
+and realtime session-change bus already exist.
+
+Decision:
+- Registration page (`/register`) mirrors the login page UX: form, client-side
+  validation (email, displayName ≥ 2, password ≥ 8), `POST /auth/register` via
+  `authApi.register`, success stores token and navigates respecting `?redirect=`.
+- Logout uses a dedicated `logout()` helper that calls `POST /auth/logout` in a
+  `try/finally` block so local state is always cleared even if the server request
+  fails. The helper invokes `clearSessionToken()` which purges all private
+  TanStack Query caches (`cart`, `quote`, `order`, `session`, `profile`,
+  `wallets`) and fires `onSessionChange`, triggering the realtime socket teardown.
+- Session expiration (401) is centralized at the Axios interceptor boundary
+  (`lib/axios/api-client.ts`). Any authenticated request that receives 401 sets a
+  re-entrancy guard, calls `clearSessionToken()`, emits a global toast event
+  ("Sua sessão expirou. Faça login novamente."), and redirects to
+  `/login?redirect=<current internal path>`. This avoids duplicating 401 logic
+  across feature hooks.
+- The header and mobile bottom nav adapt to authenticated state: anonymous shows
+  "Entrar"; authenticated shows an avatar button with a dropdown containing
+  "Perfil" (navigates to `/profile` placeholder) and "Sair" (calls `logout()`).
+- Query keys embed the token (`['session', token]`, `['order', token, id]`,
+  `['cart', identity]`, `['quote', identity]`) so user data is isolated. The
+  `onSessionChange` bus ensures the realtime layer tears down the old socket and
+  creates a new one per session.
+- Guest cart merge on login is handled by the mock (`mergeGuestCartIntoUser`)
+  respecting availability and `maxPerOrder`.
+
+Reason:
+Centralized 401 handling satisfies the session-policy requirement without
+scattering logic across hooks. The `try/finally` logout pattern guarantees local
+state cleanup even under network failure. The header adapts minimally to the
+Figma's authenticated composition while preserving all existing spacing,
+typography, and navigation.
+
+Impact:
+- `src/features/auth/session.ts` gains `logout()` with `try/finally`.
+- `src/lib/axios/api-client.ts` gains a response interceptor with a 401
+  re-entrancy guard, toast emission, and redirect.
+- `src/components/shared/site-header.tsx` and `mobile-bottom-nav.tsx` render
+  authenticated affordances.
+- `src/features/auth/pages/register-page.tsx` + Vitest (6) + Playwright
+  `auth.spec.ts` (9 scenarios × desktop + mobile) cover AUTH-01..08.
+- RT-11 session isolation still passes; realtime session-change bus unchanged.
+
 ---
 
 # 18. Figma Deviations

@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/lib/api/resources';
-import { getSessionToken } from '@/features/auth/session';
+import { getSessionToken, onSessionChange } from '@/features/auth/session';
 import type { Session } from '@/types/domain';
 
 export function sessionQueryKey(token: string | null) {
@@ -14,7 +14,12 @@ export function sessionQueryKey(token: string | null) {
  * session purge on logout/user switching.
  */
 export function useSession() {
-  const token = useMemo(getSessionToken, []);
+  const [token, setToken] = useState<string | null>(() => getSessionToken());
+
+  useEffect(() => {
+    return onSessionChange(setToken);
+  }, []);
+
   return useQuery({
     queryKey: sessionQueryKey(token),
     queryFn: () => authApi.session(token as string),

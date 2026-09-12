@@ -43,7 +43,7 @@ export function LoginPage() {
   const login = useMutation({
     mutationFn: (input: LoginInput) => authApi.login(input, getGuestId()),
     onSuccess: ({ session }) => {
-      setSessionToken(session.token);
+      setSessionToken(session.token, session.user);
       const destination = resolveLoginDestination(search.redirect);
       if (destination.kind === 'checkout') {
         void navigate({ to: '/checkout' });
@@ -122,12 +122,13 @@ export function LoginPage() {
       </form>
 
       <p className="mt-6 text-sm text-kurio-tan">
-        Ainda não tem uma conta? O cadastro não faz parte deste desafio.{' '}
+        Ainda não tem uma conta?{' '}
         <Link
-          to="/"
+          to="/register"
+          search={search.redirect ? { redirect: search.redirect } : undefined}
           className="font-display font-bold text-kurio-accent outline-none rounded-sm transition-colors hover:text-kurio-cream focus-visible:ring-2 focus-visible:ring-kurio-accent"
         >
-          Continue explorando o catálogo
+          Cadastrar
           <ArrowRightIcon width={14} height={14} className="inline-block align-[-2px] ml-1" />
         </Link>
       </p>

@@ -18,6 +18,7 @@ import {
   nextId,
   persistMockDatabase,
   removeSession,
+  clearGuestCart,
 } from '@/mocks/database/mock-database';
 import { hashPassword } from '@/mocks/database/password';
 import { broadcastOrderUpdated, createRealtimeEnvelope } from '@/mocks/socket/hub';
@@ -179,6 +180,10 @@ export const domainHandlers = [
     if (scenario) return scenario;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!getSession(token)) return unauthorized();
+    const guestId = request.headers.get('x-guest-id');
+    if (guestId) {
+      clearGuestCart(guestId);
+    }
     removeSession(token);
     persistMockDatabase();
     return new HttpResponse(null, { status: 204 });

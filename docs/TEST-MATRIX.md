@@ -52,14 +52,23 @@ The README remains authoritative.
 | AUTH-07 | Logout                  | auth.spec |
 | AUTH-08 | User switching          | auth.spec |
 
-Implemented authentication evidence (login required by the checkout/orders
-milestone; the rest of the AUTH surface belongs to the authentication
-milestone):
+Implemented authentication evidence:
 
 - `src/features/auth/login.test.tsx` (Vitest, 7 tests): heading/form render,
   empty-field validation, invalid credentials, successful login storing the
   session token, `redirect=/checkout` resolution, `redirect` to an order page,
   and rejection of non-internal redirect values.
+- `src/features/auth/register.test.tsx` (Vitest, 6 tests): heading/form render,
+  empty-field validation, invalid email/short name/short password, registration
+  conflict (409), successful registration with redirect to home and to checkout.
+- `tests/e2e/auth.spec.ts` (Playwright, desktop + mobile): AUTH-01 registration
+  success, AUTH-02 validation errors (empty, invalid email, short name, short
+  password), AUTH-03 duplicate email conflict, AUTH-04 login success with
+  redirect to checkout/order/malicious redirect fallback, AUTH-05 session
+  persistence across refresh, AUTH-06 session expiration via `session-expired`
+  scenario redirects to login with toast, AUTH-07 logout clears session and
+  private caches (cart isolation), AUTH-08 user switching isolates private data.
+  Every scenario starts from isolated mock state via `POST /api/__mock/reset`.
 
 ---
 

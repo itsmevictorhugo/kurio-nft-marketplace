@@ -17,3 +17,18 @@ export function getGuestId(): string {
     return 'kurio-guest-fallback';
   }
 }
+
+/**
+ * Clears the guest cart for the given guest ID by calling the mock API.
+ * This is used on logout to ensure the guest cart is empty.
+ */
+export async function clearGuestCart(guestId: string): Promise<void> {
+  try {
+    await fetch('/api/cart', {
+      method: 'DELETE',
+      headers: { 'X-Guest-Id': guestId },
+    });
+  } catch {
+    // Best effort; ignore network errors
+  }
+}

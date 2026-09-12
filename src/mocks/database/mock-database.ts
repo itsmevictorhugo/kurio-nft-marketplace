@@ -261,6 +261,14 @@ export function getOrCreateCart(ownerId: string): Cart {
   return cart;
 }
 
+export function clearGuestCart(guestId: string): void {
+  const database = getMockDatabase();
+  const guestCart = database.cartsByOwner.get(guestOwnerKey(guestId));
+  if (guestCart) {
+    guestCart.items = [];
+  }
+}
+
 export function nextId(kind: keyof MockDatabase['counters']) {
   const database = getMockDatabase();
   database.counters[kind] += 1;

@@ -281,11 +281,11 @@ describe('cart identity', () => {
 
   it('keeps guest and authenticated cart data in separate cache entries', async () => {
     await seedGuestCart('isol-guest', [aurora]);
-    const guestKey = cartQueryKey({ guestId: 'isol-guest' });
+    const guestKey = cartQueryKey({ guestId: 'isol-guest', sessionVersion: 0 });
 
     const session = await authApi.login({ email: 'ada@kurio.test', password: 'kurio-ada-2026' });
     setSessionToken(session.session.token);
-    const authKey = cartQueryKey({ token: session.session.token });
+    const authKey = cartQueryKey({ token: session.session.token, sessionVersion: 0 });
 
     expect(guestKey).not.toEqual(authKey);
     expect(getSessionToken()).toBe(session.session.token);
@@ -297,7 +297,7 @@ describe('cart identity', () => {
 
     const session = { token: 'session-test-token' };
     setSessionToken(session.token);
-    expect(getRequestIdentity()).toEqual({ token: session.token });
+    expect(getRequestIdentity()).toEqual({ token: session.token, sessionVersion: 0 });
 
     clearSessionToken();
     expect('guestId' in getRequestIdentity()).toBe(true);

@@ -50,8 +50,8 @@ export const authApi = {
   async session(token: string) {
     return (await apiClient.get<SessionResponse>('/auth/session', identityConfig({ token }))).data;
   },
-  async logout(token: string) {
-    await apiClient.post('/auth/logout', undefined, identityConfig({ token }));
+  async logout(token: string, guestId?: string) {
+    await apiClient.post('/auth/logout', undefined, identityConfig({ token, guestId }));
   },
 };
 

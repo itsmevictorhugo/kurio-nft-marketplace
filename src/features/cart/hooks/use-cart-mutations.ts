@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { cartApi, type RequestIdentity } from '@/lib/api/resources';
+import { cartApi } from '@/lib/api/resources';
 import { cartQueryKey, getRequestIdentity, quoteQueryKey } from '@/features/cart/identity';
+import { useSessionVersion } from '@/features/auth/session';
 import type { CartResponse } from '@/types/api';
 
 const pendingPerItem = new Map<string, Promise<unknown>>();
@@ -22,13 +23,14 @@ export function withSerializedMutation<T>(key: string, task: () => Promise<T>): 
   return next;
 }
 
-function readCart(queryClient: ReturnType<typeof useQueryClient>, identity: RequestIdentity) {
+function readCart(queryClient: ReturnType<typeof useQueryClient>, identity: ReturnType<typeof getRequestIdentity>) {
   return queryClient.getQueryData<CartResponse>(cartQueryKey(identity));
 }
 
 export function useUpdateCartItemQuantity() {
   const queryClient = useQueryClient();
-  const identity = useMemo(getRequestIdentity, []);
+  const sessionVersion = useSessionVersion();
+  const identity = useMemo(getRequestIdentity, [sessionVersion]);
 
   return useMutation({
     mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) =>
@@ -64,7 +66,8 @@ export function useUpdateCartItemQuantity() {
 
 export function useRemoveCartItem() {
   const queryClient = useQueryClient();
-  const identity = useMemo(getRequestIdentity, []);
+  const sessionVersion = useSessionVersion();
+  const identity = useMemo(getRequestIdentity, [sessionVersion]);
 
   return useMutation({
     mutationFn: (itemId: string) => withSerializedMutation(itemId, () => cartApi.remove(identity, itemId)),
@@ -92,7 +95,8 @@ export function useRemoveCartItem() {
 
 export function useClearCart() {
   const queryClient = useQueryClient();
-  const identity = useMemo(getRequestIdentity, []);
+  const sessionVersion = useSessionVersion();
+  const identity = useMemo(getRequestIdentity, [sessionVersion]);
 
   return useMutation({
     mutationFn: () => withSerializedMutation('clear-cart', () => cartApi.clear(identity)),

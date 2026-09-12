@@ -3,6 +3,7 @@ import { RootLayout } from '@/app/layouts/root-layout';
 import { RoutePlaceholder } from '@/components/shared/route-placeholder';
 import { getSessionToken } from '@/features/auth/session';
 import { LoginPage } from '@/features/auth/pages/login-page';
+import { RegisterPage } from '@/features/auth/pages/register-page';
 import { HomePage } from '@/features/catalog/pages/home-page';
 import { validateCatalogSearch } from '@/features/catalog/search-params';
 import { NftDetailPage } from '@/features/nft/pages/nft-detail-page';
@@ -84,7 +85,15 @@ const loginRoute = createRoute({
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
-  component: () => <RoutePlaceholder title="Register" />, 
+  beforeLoad: () => {
+    if (getSessionToken()) {
+      throw redirect({ to: '/' });
+    }
+  },
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search?.redirect === 'string' ? search.redirect : undefined,
+  }),
+  component: RegisterPage,
 });
 
 const profileRoute = createRoute({

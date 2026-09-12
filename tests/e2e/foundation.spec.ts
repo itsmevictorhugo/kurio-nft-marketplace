@@ -10,7 +10,7 @@ test('loads the application shell', async ({ page }) => {
     ['/order/foundation', 'Entrar na sua conta'],
     ['/order-confirmation', 'Seja dono do futuro da arte digital'],
     ['/login', 'Entrar na sua conta'],
-    ['/register', 'Register'],
+    ['/register', 'Criar sua conta'],
     ['/profile', 'Profile'],
     ['/wallets', 'Wallets'],
   ] as const;

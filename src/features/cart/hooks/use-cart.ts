@@ -2,10 +2,12 @@ import { useMemo } from 'react';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { cartApi, nftApi } from '@/lib/api/resources';
 import { cartQueryKey, getRequestIdentity } from '@/features/cart/identity';
+import { useSessionUser } from '@/features/auth/hooks/use-session';
 import type { Cart, CartItem, Nft } from '@/types/domain';
 
 export function useCart() {
-  const identity = useMemo(getRequestIdentity, []);
+  const user = useSessionUser();
+  const identity = useMemo(getRequestIdentity, [user]);
   return useQuery({
     queryKey: cartQueryKey(identity),
     queryFn: () => cartApi.get(identity),
